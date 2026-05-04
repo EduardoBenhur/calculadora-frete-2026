@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Frete — GPA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ─── TOKENS ──────────────────────────────────────────────────── */
+:root {
+  --bg:          #0d1117;
+  --surface:     #161b25;
+  --surface2:    #1c2333;
+  --border:      rgba(255,255,255,0.07);
+  --border2:     rgba(255,255,255,0.13);
+  --text:        #e2e8f0;
+  --muted:       #64748b;
+  --primary:     #3b82f6;
+  --primary-glow:rgba(59,130,246,0.18);
+  --amber:       #f59e0b;
+  --amber-glow:  rgba(245,158,11,0.15);
+  --red:         #ef4444;
+  --red-glow:    rgba(239,68,68,0.13);
+  --green:       #10b981;
+  --green-glow:  rgba(16,185,129,0.13);
+  --purple:      #8b5cf6;
+  --r:           12px;
+  --r-sm:        8px;
+  --shadow:      0 4px 24px rgba(0,0,0,0.4);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;font-size:14px;}
+
+/* ─── HEADER ──────────────────────────────────────────────────── */
+.header{
+  display:flex;align-items:center;gap:14px;
+  padding:16px 28px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+  position:sticky;top:0;z-index:100;
+}
+.logo{
+  width:38px;height:38px;border-radius:10px;
+  background:linear-gradient(135deg,var(--primary),#1d4ed8);
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;
+}
+.header-title{font-size:15px;font-weight:600;letter-spacing:-0.02em;}
+.header-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.api-status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
+.api-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);}
+.api-dot.google{background:var(--green);}
+.api-dot.osrm{background:var(--amber);}
+.btn-config{
+  font-size:12px;padding:5px 12px;border-radius:6px;
+  border:1px solid var(--border2);background:var(--surface2);
+  color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif;
+  transition:all .15s;
+}
+.btn-config:hover{background:var(--surface);border-color:var(--primary);}
+
+/* ─── LAYOUT ──────────────────────────────────────────────────── */
+.app{display:grid;grid-template-columns:400px 1fr;min-height:calc(100vh - 71px);}
+
+/* ─── SIDEBAR ─────────────────────────────────────────────────── */
+.sidebar{
+  border-right:1px solid var(--border);
+  padding:20px;display:flex;flex-direction:column;gap:18px;
+  overflow-y:auto;background:var(--surface);
+}
+.section-label{
+  font-size:10px;font-weight:600;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--muted);
+  padding-bottom:8px;border-bottom:1px solid var(--border);
+  margin-bottom:2px;
+}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:12px;color:var(--muted);font-weight:500;}
+select,input[type=number],input[type=text],input[type=password]{
+  width:100%;padding:9px 12px;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:var(--r-sm);color:var(--text);
+  font-family:'DM Sans',sans-serif;font-size:13px;
+  outline:none;transition:border-color .2s,box-shadow .2s;
+}
+select{
+  appearance:none;-webkit-appearance:none;padding-right:32px;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;
+}
+select:focus,input:focus{border-color:rgba(59,130,246,.5);box-shadow:0 0 0 3px rgba(59,130,246,.1);}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* ─── NIVEL ───────────────────────────────────────────────────── */
+.nivel-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;}
+.nivel-btn{
+  padding:9px 4px;border:1px solid var(--border2);border-radius:var(--r-sm);
+  background:var(--surface2);color:var(--muted);font-size:11px;font-weight:500;
+  font-family:'DM Sans',sans-serif;cursor:pointer;text-align:center;line-height:1.5;
+  transition:all .2s;
+}
+.nivel-btn .n-range{font-size:10px;opacity:.7;display:block;}
+.nivel-btn.n1.active{background:var(--primary-glow);border-color:rgba(59,130,246,.4);color:var(--primary);}
+.nivel-btn.n2.active{background:var(--amber-glow);border-color:rgba(245,158,11,.4);color:var(--amber);}
+.nivel-btn.n3.active{background:var(--red-glow);border-color:rgba(239,68,68,.4);color:var(--red);}
+
+/* ─── ALERTAS ─────────────────────────────────────────────────── */
+.alert{
+  border-radius:var(--r-sm);padding:11px 13px;
+  font-size:12px;line-height:1.6;display:none;
+}
+.alert-title{font-weight:600;font-size:13px;margin-bottom:2px;}
+.alert-n2{background:var(--amber-glow);border:1px solid rgba(245,158,11,.3);color:var(--amber);}
+
+/* ─── ROTEIRO ─────────────────────────────────────────────────── */
+.rota-stop{display:flex;align-items:flex-start;gap:10px;}
+.rota-col{display:flex;flex-direction:column;align-items:center;padding-top:11px;}
+.rota-dot{
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:600;flex-shrink:0;
+  font-family:'DM Mono',monospace;
+}
+.rota-dot.cd {background:var(--primary-glow);color:var(--primary);border:1px solid rgba(59,130,246,.3);}
+.rota-dot.p1 {background:var(--amber-glow);color:var(--amber);border:1px solid rgba(245,158,11,.3);}
+.rota-dot.p2 {background:var(--green-glow);color:var(--green);border:1px solid rgba(16,185,129,.3);}
+.rota-dot.p3 {background:rgba(139,92,246,.13);color:var(--purple);border:1px solid rgba(139,92,246,.3);}
+.rota-line{flex:1;width:1px;background:var(--border2);min-height:8px;margin:3px 0;}
+.rota-content{flex:1;padding-bottom:10px;}
+.rota-content select{margin-bottom:0;}
+.leg-info{
+  font-size:11px;color:var(--muted);margin-top:4px;
+  font-family:'DM Mono',monospace;display:none;
+  align-items:center;gap:5px;flex-wrap:wrap;
+}
+.leg-km{color:var(--text);font-weight:500;}
+.leg-src{font-size:10px;opacity:.6;}
+.leg-spinner{animation:spin .8s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.km-pill{
+  display:flex;justify-content:space-between;align-items:center;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:var(--r-sm);padding:9px 13px;font-size:13px;
+}
+.km-pill-label{color:var(--muted);}
+.km-pill-val{font-family:'DM Mono',monospace;font-weight:500;}
+
+.btn-add{
+  width:100%;padding:8px;font-size:12px;font-weight:500;
+  color:var(--primary);background:none;cursor:pointer;
+  border:1px dashed rgba(59,130,246,.35);border-radius:var(--r-sm);
+  font-family:'DM Sans',sans-serif;transition:all .2s;
+}
+.btn-add:hover{background:var(--primary-glow);}
+
+/* ─── KM MANUAL ───────────────────────────────────────────────── */
+.manual-row{display:flex;gap:8px;align-items:center;}
+.manual-row input{flex:1;margin:0;}
+.manual-badge{
+  font-size:10px;font-weight:600;padding:3px 8px;border-radius:999px;
+  background:var(--amber-glow);color:var(--amber);border:1px solid rgba(245,158,11,.3);
+  white-space:nowrap;display:none;
+}
+.hint{font-size:11px;color:var(--muted);line-height:1.6;}
+
+/* ─── CALC BTN ────────────────────────────────────────────────── */
+.btn-calc{
+  width:100%;padding:13px;border:none;border-radius:var(--r-sm);
+  background:var(--primary);color:#fff;
+  font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;
+  cursor:pointer;letter-spacing:-0.01em;transition:opacity .2s,transform .1s;
+  box-shadow:0 4px 16px rgba(59,130,246,.3);
+}
+.btn-calc:hover{opacity:.92;}
+.btn-calc:active{transform:scale(.98);}
+.btn-calc:disabled{opacity:.4;cursor:not-allowed;}
+.btn-clear{
+  width:100%;
+  margin-top:8px;
+  padding:11px 13px;
+  border:1px solid rgba(239,68,68,.35);
+  border-radius:var(--r-sm);
+  background:rgba(239,68,68,.10);
+  color:var(--red);
+  font-size:13px;
+  font-weight:700;
+  font-family:'DM Sans',sans-serif;
+  cursor:pointer;
+  transition:background .2s,border-color .2s,transform .1s;
+}
+.btn-clear:hover{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.55);}
+.btn-clear:active{transform:scale(.98);}
+
+.btn-pdf{
+  width:100%;
+  margin-top:8px;
+  padding:11px 13px;
+  border:1px solid rgba(16,185,129,.35);
+  border-radius:var(--r-sm);
+  background:rgba(16,185,129,.12);
+  color:var(--green);
+  font-size:13px;
+  font-weight:700;
+  font-family:'DM Sans',sans-serif;
+  cursor:pointer;
+  transition:background .2s,border-color .2s,transform .1s;
+}
+.btn-pdf:hover{background:rgba(16,185,129,.20);border-color:rgba(16,185,129,.55);}
+.btn-pdf:active{transform:scale(.98);}
+.print-report{display:none;}
+@media print{
+  body{background:#fff!important;color:#111!important;display:block!important;font-family:Arial,sans-serif!important;}
+  .header,.app{display:none!important;}
+  .print-report{display:block!important;padding:28px!important;color:#111!important;}
+  .print-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #111;padding-bottom:14px;margin-bottom:18px;}
+  .print-title{font-size:22px;font-weight:800;margin-bottom:4px;}
+  .print-subtitle{font-size:12px;color:#444;}
+  .print-meta{font-size:11px;text-align:right;line-height:1.45;color:#333;}
+  .print-section{margin:16px 0;page-break-inside:avoid;}
+  .print-section h3{font-size:13px;margin:0 0 8px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #ddd;padding-bottom:5px;}
+  .print-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .print-box{border:1px solid #ddd;border-radius:8px;padding:10px;background:#fafafa;}
+  .print-label{font-size:10px;color:#555;text-transform:uppercase;margin-bottom:4px;}
+  .print-value{font-size:15px;font-weight:700;}
+  .print-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .print-table th{background:#f1f5f9;color:#111;text-align:left;border:1px solid #ddd;padding:7px;font-size:11px;text-transform:uppercase;}
+  .print-table td{border:1px solid #ddd;padding:7px;vertical-align:top;}
+  .print-total{font-size:20px;font-weight:800;text-align:right;margin-top:8px;}
+  .print-note{font-size:11px;color:#444;line-height:1.5;border-top:1px solid #ddd;margin-top:18px;padding-top:10px;}
+}
+
+
+/* ─── MAIN ────────────────────────────────────────────────────── */
+.main{padding:28px;display:flex;flex-direction:column;gap:0;overflow-y:auto;}
+
+/* ─── NAV TABS ────────────────────────────────────────────────── */
+.nav-tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:24px;}
+.nav-tab{
+  font-size:13px;padding:9px 16px;border:none;background:none;
+  color:var(--muted);font-family:'DM Sans',sans-serif;cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;
+}
+.nav-tab:hover{color:var(--text);}
+.nav-tab.active{color:var(--text);border-bottom-color:var(--primary);font-weight:500;}
+
+/* ─── EMPTY STATE ─────────────────────────────────────────────── */
+.empty{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:12px;
+  color:var(--muted);text-align:center;padding:60px 20px;
+}
+.empty-icon{font-size:52px;opacity:.35;}
+.empty h3{font-size:16px;font-weight:500;color:var(--text);}
+.empty p{font-size:13px;max-width:260px;line-height:1.7;}
+
+/* ─── RESULTADO ───────────────────────────────────────────────── */
+.result-wrap{display:none;flex-direction:column;gap:20px;}
+.result-wrap.on{display:flex;}
+
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.metric{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:16px;
+}
+.metric .m-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;}
+.metric .m-val{font-size:22px;font-weight:600;font-family:'DM Mono',monospace;letter-spacing:-.03em;}
+.metric .m-sub{font-size:11px;color:var(--muted);margin-top:5px;}
+.metric.total{background:var(--green-glow);border-color:rgba(16,185,129,.2);}
+.metric.total .m-lbl{color:rgba(16,185,129,.7);}
+.metric.total .m-val{color:var(--green);font-size:28px;}
+
+/* ─── DETALHE CARD ────────────────────────────────────────────── */
+.dcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.dcard-header{
+  padding:12px 18px;border-bottom:1px solid var(--border);
+  font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--muted);
+}
+.trecho{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 18px;border-bottom:1px solid var(--border);gap:12px;
+  transition:background .15s;
+}
+.trecho:last-child{border-bottom:none;}
+.trecho:hover{background:var(--surface2);}
+.trecho-left{display:flex;flex-direction:column;gap:3px;}
+.trecho-nome{font-size:13px;font-weight:500;}
+.trecho-bairro{font-size:11px;color:var(--muted);}
+.trecho-right{text-align:right;flex-shrink:0;}
+.trecho-km{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;}
+.trecho-val{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px;}
+
+.resumo-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 18px;border-bottom:1px solid var(--border);font-size:13px;
+}
+.resumo-row:last-child{border-bottom:none;}
+.r-lbl{color:var(--muted);}
+.r-val{font-family:'DM Mono',monospace;font-weight:500;}
+.resumo-row.total-row{background:var(--green-glow);}
+.resumo-row.total-row .r-lbl{color:rgba(16,185,129,.8);font-weight:600;}
+.resumo-row.total-row .r-val{color:var(--green);font-size:16px;}
+
+.dist-footer{
+  display:flex;align-items:center;gap:7px;
+  padding:9px 18px;border-top:1px solid var(--border);
+  font-size:11px;color:var(--muted);
+}
+.ddot{width:7px;height:7px;border-radius:50%;}
+.ddot.google{background:var(--green);}
+.ddot.osrm{background:var(--amber);}
+.ddot.manual{background:var(--red);}
+.ddot.haversine{background:var(--red);}
+
+/* ─── TABELAS ─────────────────────────────────────────────────── */
+.tab-wrap{display:none;}
+.tab-wrap.on{display:block;}
+.tab-scroll{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{
+  text-align:left;padding:10px 14px;
+  background:var(--surface);color:var(--muted);
+  font-size:10px;text-transform:uppercase;letter-spacing:.07em;
+  border-bottom:1px solid var(--border);font-weight:500;white-space:nowrap;
+}
+td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text);}
+tr:hover td{background:var(--surface2);}
+.tag{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:999px;}
+.tag-frio{background:var(--primary-glow);color:var(--primary);}
+.tag-seco{background:var(--amber-glow);color:var(--amber);}
+.mono{font-family:'DM Mono',monospace;}
+
+/* ─── PAINEL GOOGLE MAPS MANUAL ───────────────────────────────── */
+.map-helper{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:20px;}
+.map-helper-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border);}
+.map-helper-title{font-size:13px;font-weight:600;}
+.map-helper-sub{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5;}
+.map-grid{display:flex;flex-direction:column;gap:12px;min-height:420px;padding:16px;}
+.map-frame-wrap{background:#0b1220;min-height:520px;border:1px solid var(--border2);border-radius:var(--r);overflow:hidden;}
+.map-frame{width:100%;height:100%;min-height:520px;border:0;display:block;}
+.btn-map{padding:8px 12px;border:none;border-radius:var(--r-sm);background:var(--green);color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.btn-map.secondary{background:var(--surface2);border:1px solid var(--border2);color:var(--text);}
+.route-bar{background:linear-gradient(180deg,rgba(59,130,246,.08),rgba(255,255,255,.025));border:1px solid var(--border2);border-radius:var(--r);padding:12px 14px;box-shadow:0 10px 28px rgba(0,0,0,.16);}
+.route-bar-header{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:10px;}
+.route-bar-title{font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#dbeafe;}
+.route-bar-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+.route-bar-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.route-bar-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--text);}
+.route-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(28,35,51,.9);border:1px solid var(--border2);border-radius:999px;padding:6px 10px;line-height:1;}
+.route-pill-dot{width:20px;height:20px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:9px;font-weight:800;color:#fff;}
+.route-pill-dot.cd{background:var(--primary);}.route-pill-dot.p1{background:var(--amber);}.route-pill-dot.p2{background:var(--green);}.route-pill-dot.p3{background:var(--purple);}
+.route-pill-main{font-weight:700;color:var(--text);}
+.route-pill-sub{color:var(--muted);font-weight:500;}
+.route-arrow{color:var(--muted);opacity:.55;}
+.route-compact{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015));border:1px solid var(--border2);border-radius:var(--r);overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,.18);}
+.route-compact-head{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:rgba(59,130,246,.06);border:0;color:var(--text);font-family:'DM Sans',sans-serif;cursor:pointer;text-align:left;}
+.route-compact-title{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#cbd5e1;}
+.route-compact-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+.route-chevron{width:28px;height:28px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:var(--surface2);border:1px solid var(--border2);color:var(--primary);transition:transform .18s ease;flex-shrink:0;}
+.route-compact.open .route-chevron{transform:rotate(180deg);}
+.route-compact-body{display:none;padding:6px 12px 12px;}
+.route-compact.open .route-compact-body{display:block;}
+.route-mini-list{display:flex;flex-direction:column;gap:8px;margin-top:6px;}
+.route-mini-item{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:flex-start;padding:9px 8px;border:1px solid var(--border);border-radius:10px;background:rgba(13,17,23,.24);}
+.route-mini-dot{width:26px;height:26px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;font-family:'DM Mono',monospace;color:#fff;}
+.route-mini-dot.cd{background:var(--primary);}.route-mini-dot.p1{background:var(--amber);}.route-mini-dot.p2{background:var(--green);}.route-mini-dot.p3{background:var(--purple);}
+.route-mini-name{font-size:12px;font-weight:600;color:var(--text);line-height:1.35;}
+.route-mini-address{font-size:11px;color:var(--muted);line-height:1.45;margin-top:2px;}
+.route-mini-empty{font-size:12px;color:var(--muted);padding:10px;line-height:1.5;}
+
+@media(max-width:1100px){.route-bar-header{align-items:flex-start;flex-direction:column}.route-bar-actions{width:100%}.route-bar-actions .btn-map{flex:1}.map-frame-wrap,.map-frame{min-height:420px}}
+
+/* ─── MODAL API KEY ───────────────────────────────────────────── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;z-index:200;display:none;
+}
+.modal-overlay.on{display:flex;}
+.modal{
+  background:var(--surface);border:1px solid var(--border2);border-radius:16px;
+  padding:28px;width:min(480px,90vw);box-shadow:var(--shadow);
+}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:6px;}
+.modal p{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:16px;}
+.modal .step{
+  display:flex;gap:12px;margin-bottom:12px;
+  font-size:12px;line-height:1.6;color:var(--muted);
+}
+.step-num{
+  width:20px;height:20px;border-radius:50%;background:var(--primary-glow);
+  color:var(--primary);font-size:10px;font-weight:700;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;margin-top:1px;
+}
+.modal input{margin-bottom:12px;}
+.modal-actions{display:flex;gap:10px;}
+.btn-save{
+  flex:1;padding:10px;border:none;border-radius:var(--r-sm);
+  background:var(--primary);color:#fff;font-family:'DM Sans',sans-serif;
+  font-size:13px;font-weight:600;cursor:pointer;transition:opacity .2s;
+}
+.btn-save:hover{opacity:.9;}
+.btn-cancel{
+  padding:10px 16px;border:1px solid var(--border2);border-radius:var(--r-sm);
+  background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;
+  font-size:13px;cursor:pointer;
+}
+.modal-note{
+  font-size:11px;color:var(--muted);background:var(--surface2);
+  border-radius:var(--r-sm);padding:10px 13px;margin-top:12px;line-height:1.6;
+}
+
+/* ─── RESPONSIVE ──────────────────────────────────────────────── */
+@media(max-width:960px){
+  .app{grid-template-columns:1fr;}
+  .sidebar{border-right:none;border-bottom:1px solid var(--border);}
+  .metrics{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:560px){
+  .header{padding:14px 16px;}
+  .main,.sidebar{padding:16px;}
+  .metrics{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ HEADER ═══════════════════ -->
+<header class="header">
+  <div class="logo">🚚</div>
+  <div>
+    <div class="header-title">Calculadora de Frete GPA</div>
+    <div class="header-sub">Logística Inteligente · Grupo Pão de Açúcar</div>
+  </div>
+  <div class="header-right">
+    <div class="api-status">
+      <div class="api-dot google"></div>
+      <span>Modo manual com Google Maps</span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════ MODAL API KEY ═══════════════════ -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3>🔑 Google Maps API Key</h3>
+    <p>Com uma API Key do Google você obtém a distância real de rota (trânsito, estrada). Siga os passos abaixo para configurar:</p>
+    <div class="step"><div class="step-num">1</div><div>Acesse <strong>console.cloud.google.com</strong> e crie um projeto.</div></div>
+    <div class="step"><div class="step-num">2</div><div>No menu lateral, vá em <strong>APIs e Serviços → Biblioteca</strong> e ative a <strong>Distance Matrix API</strong>.</div></div>
+    <div class="step"><div class="step-num">3</div><div>Vá em <strong>Credenciais → Criar Credencial → Chave de API</strong>. Cole abaixo:</div></div>
+    <div class="field" style="margin-bottom:0">
+      <label>Sua API Key</label>
+      <input type="password" id="api-key-input" placeholder="AIza...">
+    </div>
+    <div class="modal-note">
+      ⚠️ O Google oferece US$200/mês gratuitos — suficiente para ~40.000 consultas por mês. Para uso interno do GPA isso é mais que suficiente. A chave fica salva apenas no seu navegador (localStorage).
+    </div>
+    <div style="margin-top:14px;">
+      <div class="modal-note" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:var(--red);">
+        ⚠️ <strong>Sem API Key</strong> o sistema tenta usar o OSRM/Valhalla (gratuito). Se falhar, cai para <strong>estimativa em linha reta</strong> que pode ter até 20% de erro — como o caso Araruama→Macaé (79 km linha reta vs 92 km real). Configure a key para garantir precisão.
+      </div>
+    </div>
+    <div class="modal-actions" style="margin-top:14px;">
+      <button class="btn-save" onclick="saveApiKey()">Salvar e Fechar</button>
+      <button class="btn-cancel" onclick="closeModal()">Fechar sem salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ APP ═══════════════════ -->
+<div class="app">
+
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="sidebar">
+
+    <!-- VEÍCULO -->
+    <div>
+      <div class="section-label">Veículo</div>
+      <div class="grid2" style="margin-top:10px;">
+        <div class="field">
+          <label>Tipo</label>
+          <select id="vtype" onchange="updateVtype()"><option value="">Selecione...</option></select>
+        </div>
+        <div class="field">
+          <label>Modalidade</label>
+          <select id="vmod" onchange="triggerRecalc()"><option value="">Selecione...</option></select>
+        </div>
+      </div>
+    </div>
+
+    <!-- NÍVEL -->
+    <div>
+      <div class="section-label">Nível da Tabela</div>
+      <div class="nivel-grid" style="margin-top:10px;">
+        <button class="nivel-btn n1 active" id="btn-n1" onclick="setNivel(1)">Nível 1<span class="n-range">até 120 km</span></button>
+        <button class="nivel-btn n2" id="btn-n2" onclick="setNivel(2)">Nível 2<span class="n-range">121–250 km</span></button>
+      </div>
+      <div class="alert alert-n2" id="alert-n2" style="margin-top:8px;">
+        <div class="alert-title">⚠️ Mude para Nível 2</div>
+        Distância do roteiro acima de 120 km. Aplique a tarifa correta.
+      </div>
+    </div>
+
+    <!-- ROTEIRO -->
+    <div>
+      <div class="section-label">Roteiro de Entrega</div>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:0;">
+
+        <!-- CD -->
+        <div class="rota-stop">
+          <div class="rota-col"><div class="rota-dot cd">CD</div><div class="rota-line"></div></div>
+          <div class="rota-content">
+            <select id="loja_0" onchange="triggerRecalc()"><option value="">Origem — CD</option></select>
+            <div class="leg-info" id="leg-0"></div>
+          </div>
+        </div>
+
+        <!-- P1 -->
+        <div class="rota-stop">
+          <div class="rota-col"><div class="rota-dot p1">1</div><div class="rota-line"></div></div>
+          <div class="rota-content">
+            <select id="loja_1" onchange="triggerRecalc()"><option value="">Parada 1 (obrigatória)</option></select>
+            <div class="leg-info" id="leg-1"></div>
+          </div>
+        </div>
+
+        <!-- P2 -->
+        <div class="rota-stop">
+          <div class="rota-col"><div class="rota-dot p2">2</div><div class="rota-line" id="line-2"></div></div>
+          <div class="rota-content">
+            <select id="loja_2" onchange="triggerRecalc()"><option value="">Parada 2 (opcional)</option></select>
+            <div class="leg-info" id="leg-2"></div>
+          </div>
+        </div>
+
+        <!-- P3 oculto -->
+        <div class="rota-stop" id="stop-3" style="display:none;">
+          <div class="rota-col"><div class="rota-dot p3">3</div></div>
+          <div class="rota-content">
+            <select id="loja_3" onchange="triggerRecalc()"><option value="">Parada 3 (opcional)</option></select>
+            <div class="leg-info" id="leg-3"></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-add" id="btn-p3" onclick="toggleP3()" style="margin-top:8px;">+ Adicionar 3ª parada</button>
+    </div>
+
+    <!-- KM TOTAL -->
+    <div id="km-total-area" style="display:none;">
+      <div class="km-pill">
+        <span class="km-pill-label">KM total do roteiro</span>
+        <span class="km-pill-val" id="km-total-val">—</span>
+      </div>
+    </div>
+
+    <!-- KM MANUAL -->
+    <div>
+      <div class="section-label">KM Manual (Coloque o km que deu no maps do google)</div>
+      <div class="manual-row" style="margin-top:10px;">
+        <input type="number" id="km-manual" min="0" step="0.1" placeholder="Ex: 87.5 km">
+        <div class="manual-badge" id="manual-badge">MANUAL</div>
+      </div>
+    </div>
+
+    <!-- CALCULAR -->
+    <button class="btn-calc" id="btn-calc" onclick="calcular()">Calcular Frete →</button>
+    <button class="btn-pdf" id="btn-pdf" onclick="gerarDemonstrativoPDF()">📄 Gerar PDF do Cálculo</button>
+    <button class="btn-clear" id="btn-clear" onclick="limparTudo()">Limpar Tudo</button>
+
+  </aside>
+
+  <!-- ─── MAIN ─── -->
+  <main class="main">
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showTab('resultado')">Resultado</button>
+      <button class="nav-tab" onclick="showTab('tabela')">Tabela de Fretes</button>
+      <button class="nav-tab" onclick="showTab('lojas')">Lojas (<span id="lojas-count">0</span>)</button>
+      <button class="nav-tab" onclick="showTab('guia')">📖 Como Usar</button>
+    </div>
+
+    <!-- RESULTADO -->
+    <div id="tab-resultado">
+      <div class="map-helper">
+        <div class="map-grid">
+          <div class="route-bar">
+            <div class="route-bar-header">
+              <div>
+                <div class="route-bar-title">🗺️ Roteiro usado no Google Maps</div>
+                <div class="route-bar-sub" id="route-bar-sub">Selecione origem e destino</div>
+              </div>
+              <div class="route-bar-actions">
+                <button class="btn-map" onclick="loadGoogleMapsEmbed()">Mostrar rota no painel</button>
+                <button class="btn-map secondary" onclick="openGoogleMaps()">Abrir no Google Maps</button>
+              </div>
+            </div>
+            <div class="route-bar-line" id="route-bar-line"></div>
+          </div>
+          <div class="map-frame-wrap"><iframe class="map-frame" id="map-frame" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+        </div>
+      </div>
+      <div class="empty" id="empty-state">
+        <div class="empty-icon">📦</div>
+        <h3>Aguardando simulação</h3>
+        <p>Configure o veículo, monte o roteiro de entregas e clique em Calcular Frete.</p>
+      </div>
+      <div class="result-wrap" id="result-wrap">
+        <div class="metrics">
+          <div class="metric">
+            <div class="m-lbl">Saída do CD</div>
+            <div class="m-val" id="r-saida">—</div>
+            <div class="m-sub" id="r-veiculo-sub">—</div>
+          </div>
+          <div class="metric">
+            <div class="m-lbl">Ad. de Paradas</div>
+            <div class="m-val" id="r-paradas">—</div>
+            <div class="m-sub" id="r-paradas-sub">—</div>
+          </div>
+          <div class="metric">
+            <div class="m-lbl">Valor KM</div>
+            <div class="m-val" id="r-kmval">—</div>
+            <div class="m-sub" id="r-kmval-sub">—</div>
+          </div>
+          <div class="metric total">
+            <div class="m-lbl">Total Final</div>
+            <div class="m-val" id="r-total">—</div>
+            <div class="m-sub" id="r-nivel-sub">—</div>
+          </div>
+        </div>
+
+        <div class="dcard">
+          <div class="dcard-header">Detalhamento por Trecho</div>
+          <div id="r-trechos"></div>
+          <div class="dist-footer" id="r-dist-footer"></div>
+        </div>
+
+        <div class="dcard">
+          <div class="dcard-header">Resumo Financeiro</div>
+          <div id="r-resumo"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABELA DE FRETES -->
+    <div class="tab-wrap" id="tab-tabela">
+      <div class="dcard">
+        <div class="dcard-header">Tabela de Fretes — 16 veículos</div>
+        <div class="tab-scroll"><table id="tbl-fretes"></table></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:12px;line-height:1.7;padding:0 2px;">
+        ⚡ Nível 1: até 120 km &nbsp;|&nbsp; Nível 2: 121–250 km &nbsp;|&nbsp; Adicional de Parada: R$ 45,00 por parada a partir da 2ª entrega.
+      </div>
+    </div>
+
+    <!-- LOJAS -->
+    <div class="tab-wrap" id="tab-lojas">
+      <div class="dcard">
+        <div class="dcard-header">Lojas GPA Cadastradas</div>
+        <div class="tab-scroll"><table id="tbl-lojas"></table></div>
+      </div>
+    </div>
+
+
+    <!-- GUIA -->
+    <div class="tab-wrap" id="tab-guia">
+
+      <style>
+        /* ── GUIA STYLES ── */
+        .guia-wrap { max-width: 860px; margin: 0 auto; padding-bottom: 40px; }
+
+        .guia-hero {
+          background: linear-gradient(135deg, rgba(59,130,246,.15) 0%, rgba(16,185,129,.08) 100%);
+          border: 1px solid rgba(59,130,246,.2);
+          border-radius: 16px;
+          padding: 28px 32px;
+          margin-bottom: 32px;
+          display: flex; align-items: center; gap: 20px;
+        }
+        .guia-hero-icon { font-size: 48px; flex-shrink: 0; }
+        .guia-hero h2 { font-size: 22px; font-weight: 700; letter-spacing: -.03em; margin-bottom: 6px; }
+        .guia-hero p  { font-size: 13px; color: var(--muted); line-height: 1.7; margin: 0; }
+
+        /* FLUXO */
+        .fluxo { display: flex; flex-direction: column; gap: 0; margin-bottom: 36px; }
+        .fluxo-step {
+          display: grid;
+          grid-template-columns: 56px 1fr;
+          gap: 0 16px;
+          position: relative;
+        }
+        .fluxo-left { display: flex; flex-direction: column; align-items: center; }
+        .step-circle {
+          width: 48px; height: 48px; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 20px; font-weight: 700;
+          flex-shrink: 0; position: relative; z-index: 1;
+          border: 2px solid;
+          transition: transform .2s;
+        }
+        .step-circle:hover { transform: scale(1.08); }
+        .step-circle.s1 { background: rgba(59,130,246,.15);  border-color: rgba(59,130,246,.4);  color: #60a5fa; }
+        .step-circle.s2 { background: rgba(245,158,11,.15);  border-color: rgba(245,158,11,.4);  color: #fbbf24; }
+        .step-circle.s3 { background: rgba(139,92,246,.15);  border-color: rgba(139,92,246,.4);  color: #a78bfa; }
+        .step-circle.s4 { background: rgba(16,185,129,.15);  border-color: rgba(16,185,129,.4);  color: #34d399; }
+        .step-circle.s5 { background: rgba(239,68,68,.15);   border-color: rgba(239,68,68,.4);   color: #f87171; }
+        .step-circle.s6 { background: rgba(236,72,153,.15);  border-color: rgba(236,72,153,.4);  color: #f472b6; }
+        .fluxo-line {
+          flex: 1; width: 2px;
+          background: linear-gradient(to bottom, var(--border2), var(--border));
+          min-height: 24px; margin: 4px 0;
+        }
+        .fluxo-last .fluxo-line { display: none; }
+
+        .step-card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 14px;
+          padding: 16px 20px;
+          margin-bottom: 20px;
+          transition: border-color .2s, box-shadow .2s;
+          cursor: default;
+        }
+        .step-card:hover {
+          border-color: var(--border2);
+          box-shadow: 0 4px 20px rgba(0,0,0,.3);
+        }
+        .step-num   { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 4px; }
+        .step-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; letter-spacing: -.01em; }
+        .step-desc  { font-size: 13px; color: var(--muted); line-height: 1.7; margin-bottom: 0; }
+        .step-tags  { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        .step-tag {
+          font-size: 11px; padding: 3px 9px; border-radius: 999px;
+          background: var(--surface2); color: var(--muted);
+          border: 1px solid var(--border2);
+        }
+        .step-tag.highlight { background: rgba(59,130,246,.12); color: #60a5fa; border-color: rgba(59,130,246,.25); }
+        .step-tag.warn { background: rgba(245,158,11,.12); color: #fbbf24; border-color: rgba(245,158,11,.25); }
+        .step-tag.ok   { background: rgba(16,185,129,.12);  color: #34d399; border-color: rgba(16,185,129,.25); }
+        .step-tag.red  { background: rgba(239,68,68,.12);   color: #f87171; border-color: rgba(239,68,68,.25); }
+
+        /* NIVEL VISUAL */
+        .nivel-explainer {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 12px;
+          margin-top: 10px;
+        }
+        .nivel-card {
+          border-radius: 10px; padding: 12px 14px;
+          border: 1px solid;
+        }
+        .nivel-card.n1 { background: rgba(59,130,246,.08);  border-color: rgba(59,130,246,.25); }
+        .nivel-card.n2 { background: rgba(245,158,11,.08);  border-color: rgba(245,158,11,.25); }
+        .nivel-card.n3 { background: rgba(239,68,68,.08);   border-color: rgba(239,68,68,.25); }
+        .nivel-card .nc-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+        .nivel-card.n1 .nc-label { color: #60a5fa; }
+        .nivel-card.n2 .nc-label { color: #fbbf24; }
+        .nivel-card.n3 .nc-label { color: #f87171; }
+        .nivel-card .nc-range { font-size: 16px; font-weight: 700; font-family: 'DM Mono', monospace; }
+        .nivel-card .nc-hint  { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+        /* FORMULA */
+        .formula-box {
+          background: var(--surface2);
+          border: 1px solid var(--border2);
+          border-radius: 12px;
+          padding: 18px 22px;
+          margin-top: 10px;
+          font-family: 'DM Mono', monospace;
+          font-size: 13px;
+          line-height: 2;
+        }
+        .f-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .f-block {
+          padding: 4px 12px; border-radius: 8px;
+          font-size: 12px; font-weight: 600;
+        }
+        .f-block.blue   { background: rgba(59,130,246,.18); color: #93c5fd; }
+        .f-block.amber  { background: rgba(245,158,11,.18); color: #fcd34d; }
+        .f-block.green  { background: rgba(16,185,129,.18); color: #6ee7b7; }
+        .f-block.purple { background: rgba(139,92,246,.18); color: #c4b5fd; }
+        .f-op { color: var(--muted); font-size: 16px; font-weight: 300; }
+        .f-eq { color: var(--green); font-size: 16px; font-weight: 700; }
+        .f-result { background: rgba(16,185,129,.2); color: #34d399; padding: 4px 14px; border-radius: 8px; font-weight: 700; }
+
+        /* DICAS */
+        .dicas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+        .dica-card {
+          background: var(--surface2); border: 1px solid var(--border);
+          border-radius: 10px; padding: 14px 16px;
+        }
+        .dica-icon { font-size: 20px; margin-bottom: 6px; }
+        .dica-title { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+        .dica-text  { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+        /* SEÇÃO TÍTULO */
+        .sec-title {
+          font-size: 11px; font-weight: 700; text-transform: uppercase;
+          letter-spacing: .1em; color: var(--muted);
+          margin-bottom: 16px; margin-top: 32px;
+          padding-bottom: 8px; border-bottom: 1px solid var(--border);
+        }
+        .sec-title:first-child { margin-top: 0; }
+
+        @media(max-width:640px){
+          .nivel-explainer { grid-template-columns: 1fr; }
+          .dicas-grid { grid-template-columns: 1fr; }
+          .guia-hero { flex-direction: column; text-align: center; }
+          .f-row { justify-content: center; }
+        }
+      </style>
+
+      <div class="guia-wrap">
+
+        <!-- HERO -->
+        <div class="guia-hero">
+          <div class="guia-hero-icon">🚚</div>
+          <div>
+            <h2>Como usar a Calculadora de Frete GPA</h2>
+            <p>Siga os 6 passos abaixo para simular o valor correto do frete. O processo leva menos de 1 minuto. Qualquer dúvida, consulte as dicas no final da página.</p>
+          </div>
+        </div>
+
+        <!-- FLUXO -->
+        <div class="sec-title">Passo a passo</div>
+        <div class="fluxo">
+
+          <!-- PASSO 1 -->
+          <div class="fluxo-step">
+            <div class="fluxo-left">
+              <div class="step-circle s1">1</div>
+              <div class="fluxo-line"></div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">Passo 1</div>
+              <div class="step-title">Selecione o tipo de veículo</div>
+              <div class="step-desc">No painel esquerdo, escolha o <strong>Tipo</strong> do veículo (ex: LE07BP2, CT28FR3) e em seguida a <strong>Modalidade</strong> — SECO ou FRIO. Cada combinação tem valores de saída e R$/km diferentes.</div>
+              <div class="step-tags">
+                <span class="step-tag highlight">Campo: Tipo de veículo</span>
+                <span class="step-tag highlight">Campo: Modalidade</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- PASSO 2 -->
+          <div class="fluxo-step">
+            <div class="fluxo-left">
+              <div class="step-circle s2">2</div>
+              <div class="fluxo-line"></div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">Passo 2</div>
+              <div class="step-title">Defina o nível da tabela</div>
+              <div class="step-desc">O nível é definido pela distância total do roteiro. Se ainda não sabe o KM, deixe no Nível 1 — o sistema vai te avisar automaticamente se precisar mudar.</div>
+              <div class="nivel-explainer" style="grid-template-columns:1fr 1fr;">
+                <div class="nivel-card n1">
+                  <div class="nc-label">Nível 1</div>
+                  <div class="nc-range">até 120 km</div>
+                  <div class="nc-hint">Tarifa padrão</div>
+                </div>
+                <div class="nivel-card n2">
+                  <div class="nc-label">Nível 2</div>
+                  <div class="nc-range">121 – 250 km</div>
+                  <div class="nc-hint">Tarifa intermediária</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PASSO 3 -->
+          <div class="fluxo-step">
+            <div class="fluxo-left">
+              <div class="step-circle s3">3</div>
+              <div class="fluxo-line"></div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">Passo 3</div>
+              <div class="step-title">Monte o roteiro de entregas</div>
+              <div class="step-desc">Selecione a <strong>origem (CD)</strong> e as <strong>paradas na ordem exata</strong> em que o veículo vai visitar as lojas. A distância é calculada em cadeia: CD → Parada 1 → Parada 2 → Parada 3.</div>
+              <div class="step-tags">
+                <span class="step-tag highlight">CD → obrigatório</span>
+                <span class="step-tag highlight">Parada 1 → obrigatória</span>
+                <span class="step-tag">Parada 2 → opcional</span>
+                <span class="step-tag">Parada 3 → opcional</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- PASSO 4 -->
+          <div class="fluxo-step">
+            <div class="fluxo-left">
+              <div class="step-circle s4">4</div>
+              <div class="fluxo-line"></div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">Passo 4</div>
+              <div class="step-title">Confira (ou ajuste) o KM calculado</div>
+              <div class="step-desc">Consulte o <strong>Google Maps</strong> com o roteiro completo e insira o valor de KM no campo <strong>KM Manual</strong>. O valor exibido pelo Google Maps é o que deve ser utilizado no cálculo.</div>
+              <div class="step-tags">
+                <span class="step-tag ok">📍 Consulte o Google Maps</span>
+                <span class="step-tag highlight">✏️ Insira o KM no campo Manual</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- PASSO 5 -->
+          <div class="fluxo-step">
+            <div class="fluxo-left">
+              <div class="step-circle s5">5</div>
+              <div class="fluxo-line"></div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">Passo 5</div>
+              <div class="step-title">Clique em "Calcular Frete →"</div>
+              <div class="step-desc">O resultado aparece à direita com o detalhamento completo por trecho e o resumo financeiro. Se a distância ultrapassar o limite do nível selecionado, um <strong>alerta aparece automaticamente</strong> pedindo para trocar o nível.</div>
+              <div class="step-tags">
+                <span class="step-tag warn">⚠️ Alerta Nível 2 se KM > 120</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- PASSO 6 -->
+          <div class="fluxo-step fluxo-last">
+            <div class="fluxo-left">
+              <div class="step-circle s6">6</div>
+              <div class="fluxo-line"></div>
+            </div>
+            <div class="step-card" style="border-color:rgba(16,185,129,.25);">
+              <div class="step-num">Passo 6</div>
+              <div class="step-title">Leia o resultado ✅</div>
+              <div class="step-desc">O <strong>Total Final</strong> aparece em verde. Você vê o valor de saída do CD, os adicionais de parada e o valor do KM rodado separados, além do detalhamento de cada trecho do roteiro.</div>
+              <div class="formula-box">
+                <div class="f-row">
+                  <span class="f-block blue">Saída CD</span>
+                  <span class="f-op">+</span>
+                  <span class="f-block amber">(Paradas extras × R$ 45)</span>
+                  <span class="f-op">+</span>
+                  <span class="f-block purple">(KM total × R$/km)</span>
+                  <span class="f-op">=</span>
+                  <span class="f-result">Total Final</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /fluxo -->
+
+        <!-- DICAS -->
+        <div class="sec-title">Dicas importantes</div>
+        <div class="dicas-grid">
+
+          <div class="dica-card">
+            <div class="dica-icon">📍</div>
+            <div class="dica-title">A ordem das paradas importa</div>
+            <div class="dica-text">Sempre monte o roteiro na <strong>sequência real</strong> que o motorista vai percorrer. A distância é calculada de ponto a ponto, então uma ordem errada gera um KM errado.</div>
+          </div>
+          <div class="dica-card">
+            <div class="dica-icon">⚠️</div>
+            <div class="dica-title">Preste atenção nos alertas de nível</div>
+            <div class="dica-text">Se aparecer um aviso laranja ou vermelho, troque o nível <strong>antes</strong> de calcular. Usar o nível errado aplica a tarifa por km incorreta e o frete sai diferente do que deveria ser pago.</div>
+          </div>
+          <div class="dica-card">
+            <div class="dica-icon">✏️</div>
+            <div class="dica-title">Sempre use o KM do Google Maps</div>
+            <div class="dica-text">Consulte o Google Maps com o roteiro completo e insira o valor de KM no campo <strong>KM Manual</strong>. Esse é o único valor aceito para o cálculo correto do frete.</div>
+          </div>
+          <div class="dica-card">
+            <div class="dica-icon">📋</div>
+            <div class="dica-title">Consulte a Tabela de Fretes</div>
+            <div class="dica-text">Na aba <strong>Tabela de Fretes</strong> você vê todos os valores de saída e R$/km para cada veículo e nível. Útil para conferir se o cálculo bate com a tabela contratual.</div>
+          </div>
+          <div class="dica-card" style="border-color:rgba(59,130,246,.3);background:rgba(59,130,246,.06);">
+            <div class="dica-icon">💬</div>
+            <div class="dica-title" style="color:#60a5fa;">Dúvidas, sugestões e melhorias?</div>
+            <div class="dica-text">Entre em contato com o criador do sistema:<br><br>
+            <strong style="color:var(--text);">Eduardo Benhur</strong><br>
+            <a href="mailto:Eduardorodriguesbenhur@gmail.com" style="color:#60a5fa;text-decoration:none;font-size:12px;">Eduardorodriguesbenhur@gmail.com</a></div>
+          </div>
+        </div>
+
+      </div><!-- /guia-wrap -->
+    </div><!-- /tab-guia -->
+
+  </main>
+</div>
+
+<div class="print-report" id="print-report"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   DADOS — TABELA DE FRETES
+═══════════════════════════════════════════════════════════════ */
+const FRETES = [
+  { tipo:"CT28BS3", mod:"SECO",  saida:509,  km1:10.00, km2:10.13, extra:45 },
+  { tipo:"TR16BP3", mod:"SECO",  saida:313,  km1:7.40,  km2:7.73,  extra:45 },
+  { tipo:"TO12BP2", mod:"SECO",  saida:200,  km1:6.96,  km2:7.09,  extra:45 },
+  { tipo:"LE07BP2", mod:"SECO",  saida:167,  km1:6.58,  km2:6.67,  extra:45 },
+  { tipo:"CT28FR3", mod:"FRIO",  saida:611,  km1:10.91, km2:10.93, extra:45 },
+  { tipo:"TR16FP3", mod:"FRIO",  saida:376,  km1:8.03,  km2:8.13,  extra:45 },
+  { tipo:"TO10FP2", mod:"FRIO",  saida:238,  km1:7.01,  km2:7.28,  extra:45 },
+  { tipo:"LE06FP2", mod:"FRIO",  saida:200,  km1:6.94,  km2:7.13,  extra:45 },
+  { tipo:"CT28BS3", mod:"SECO",  saida:1150, km1:9.69,  km2:9.69, extra:45 },
+  { tipo:"TR16BP3", mod:"SECO",  saida:760,  km1:5.51,  km2:5.57,  extra:45 },
+  { tipo:"TO12BP2", mod:"SECO",  saida:490,  km1:3.26,  km2:3.30,  extra:45 },
+  { tipo:"LE07BP2", mod:"SECO",  saida:425,  km1:2.96,  km2:3.00,  extra:45 },
+  { tipo:"CT28FR3", mod:"FRIO",  saida:1250, km1:12.75, km2:12.75, extra:45 },
+  { tipo:"TR16FP3", mod:"FRIO",  saida:806,  km1:7.24,  km2:7.24,  extra:45 },
+  { tipo:"TO10FP2", mod:"FRIO",  saida:520,  km1:4.39,  km2:4.39,  extra:45 },
+  { tipo:"LE06FP2", mod:"FRIO",  saida:350,  km1:3.98,  km2:3.98,  extra:45 },
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   DADOS — LOJAS GPA (75 lojas da planilha + CD)
+═══════════════════════════════════════════════════════════════ */
+const LOJAS = [
+  { codigo:"CD",   nome:"CD Principal",            endereco:"Rodovia Washington Luiz 20755, Xerém, Duque de Caxias, RJ", bairro:"XERÉM", lat:-22.622, lng:-43.297 },
+  { codigo:"1272", nome:"VIVEIROS DE CASTRO",       endereco:"Rua Ministro Viveiros de Castro 38, Copacabana, Rio de Janeiro, RJ",  bairro:"COPACABANA",          lat:-22.968, lng:-43.178 },
+  { codigo:"1274", nome:"DR.SATTAMINI",             endereco:"Rua Dr Satamini 164, Tijuca, Rio de Janeiro, RJ",                     bairro:"TIJUCA",              lat:-22.924, lng:-43.231 },
+  { codigo:"1281", nome:"MARQUES DE ABRANTES",      endereco:"Rua Marques de Abrantes 165, Botafogo, Rio de Janeiro, RJ",           bairro:"BOTAFOGO",            lat:-22.948, lng:-43.182 },
+  { codigo:"1287", nome:"PAROQUIA",                 endereco:"Avenida Nossa Senhora de Copacabana 493, Copacabana, Rio de Janeiro, RJ", bairro:"COPACABANA",       lat:-22.967, lng:-43.183 },
+  { codigo:"1306", nome:"PA AMERICAS",              endereco:"Avenida das Américas 900, Barra da Tijuca, Rio de Janeiro, RJ",       bairro:"BARRA DA TIJUCA",     lat:-22.999, lng:-43.368 },
+  { codigo:"1340", nome:"TIJUCA",                   endereco:"Rua Mariz e Barros 975, Tijuca, Rio de Janeiro, RJ",                  bairro:"TIJUCA",              lat:-22.921, lng:-43.242 },
+  { codigo:"1412", nome:"SIQUEIRA CAMPOS",          endereco:"Rua Siqueira Campos 97, Copacabana, Rio de Janeiro, RJ",              bairro:"COPACABANA",          lat:-22.970, lng:-43.185 },
+  { codigo:"1413", nome:"POMPEU LOUREIRO",          endereco:"Rua Pompeu Loureiro 15, Copacabana, Rio de Janeiro, RJ",              bairro:"COPACABANA",          lat:-22.966, lng:-43.186 },
+  { codigo:"1414", nome:"N.SENHORA COPACABANA",     endereco:"Avenida Nossa Senhora de Copacabana 1162, Copacabana, Rio de Janeiro, RJ", bairro:"COPACABANA",      lat:-22.971, lng:-43.177 },
+  { codigo:"1415", nome:"JD BOTANICO",              endereco:"Rua Jardim Botânico 680, Jardim Botânico, Rio de Janeiro, RJ",        bairro:"JD BOTANICO",         lat:-22.966, lng:-43.223 },
+  { codigo:"1416", nome:"SAO CRISTOVAO",            endereco:"Rua São Luiz Gonzaga 122, São Cristóvão, Rio de Janeiro, RJ",         bairro:"S CRISTOVAO",         lat:-22.906, lng:-43.211 },
+  { codigo:"1417", nome:"BARRA",                    endereco:"Avenida das Américas 2000, Barra da Tijuca, Rio de Janeiro, RJ",      bairro:"BARRA DA TIJUCA",     lat:-23.000, lng:-43.365 },
+  { codigo:"1418", nome:"ALCANTARA",                endereco:"Estrada Raul Veiga 243, Alcântara, São Gonçalo, RJ",                  bairro:"ALCANTARA",           lat:-22.843, lng:-43.325 },
+  { codigo:"1495", nome:"BOULEVARD",                endereco:"Rua Maxwell 300, Vila Isabel, Rio de Janeiro, RJ",                    bairro:"VILA ISABEL",         lat:-22.918, lng:-43.253 },
+  { codigo:"1496", nome:"NOVA IGUACU",              endereco:"Avenida Tancredo Neves 3424, Nova Iguaçu, RJ",                        bairro:"CENTRO",              lat:-22.761, lng:-43.452 },
+  { codigo:"1500", nome:"EXTRA BARRA",              endereco:"Avenida das Américas 1510, Barra da Tijuca, Rio de Janeiro, RJ",      bairro:"BARRA DA TIJUCA",     lat:-23.001, lng:-43.374 },
+  { codigo:"1501", nome:"NITEROI",                  endereco:"Rua Desidério de Oliveira, Centro, Niterói, RJ",                      bairro:"CENTRO",              lat:-22.896, lng:-43.118 },
+  { codigo:"1502", nome:"EXTRA MARACANA",           endereco:"Rua José Higino 115, Tijuca, Rio de Janeiro, RJ",                     bairro:"TIJUCA",              lat:-22.912, lng:-43.230 },
+  { codigo:"1504", nome:"SAO GONCALO - RJ",         endereco:"Avenida São Gonçalo 100, São Gonçalo, RJ",                            bairro:"BOA VISTA",           lat:-22.827, lng:-43.055 },
+  { codigo:"1505", nome:"SAO JOAO DE MERITI",       endereco:"Rua São Pedro 57, São João de Meriti, RJ",                            bairro:"CENTRO",              lat:-22.804, lng:-43.371 },
+  { codigo:"1508", nome:"N. IGUACU - N.PECANHA",    endereco:"Avenida Nilo Peçanha 197, Nova Iguaçu, RJ",                           bairro:"CENTRO",              lat:-22.755, lng:-43.462 },
+  { codigo:"1509", nome:"RECREIO",                  endereco:"Avenida das Américas 19019, Recreio dos Bandeirantes, Rio de Janeiro, RJ", bairro:"RECREIO",        lat:-23.009, lng:-43.474 },
+  { codigo:"1511", nome:"DUQUE DE CAXIAS",          endereco:"Avenida Governador Leonel de Moura Brizola 1190, Duque de Caxias, RJ", bairro:"CENTRO",            lat:-22.785, lng:-43.316 },
+  { codigo:"1512", nome:"QUEIMADOS",                endereco:"Rua Dr Eloy Teixeira 370, Queimados, RJ",                             bairro:"CENTRO",              lat:-22.712, lng:-43.557 },
+  { codigo:"1513", nome:"BOTAFOGO",                 endereco:"Rua Barão de Itambi 50, Botafogo, Rio de Janeiro, RJ",                bairro:"BOTAFOGO",            lat:-22.948, lng:-43.185 },
+  { codigo:"1515", nome:"VILA ISABEL",              endereco:"Avenida 28 de Setembro 431, Vila Isabel, Rio de Janeiro, RJ",         bairro:"VILA ISABEL",         lat:-22.921, lng:-43.254 },
+  { codigo:"1516", nome:"LEBLON",                   endereco:"Rua José Linhares 245, Leblon, Rio de Janeiro, RJ",                   bairro:"LEBLON",              lat:-22.985, lng:-43.225 },
+  { codigo:"1629", nome:"BOTAFOGO - VOL.PATRIA",    endereco:"Rua Voluntários da Pátria 311, Botafogo, Rio de Janeiro, RJ",         bairro:"BOTAFOGO",            lat:-22.944, lng:-43.183 },
+  { codigo:"1635", nome:"LARGO DO MACHADO",         endereco:"Largo do Machado 19, Catete, Rio de Janeiro, RJ",                     bairro:"CATETE",              lat:-22.929, lng:-43.178 },
+  { codigo:"1649", nome:"SAO CONRADO",              endereco:"Rua General Olímpio Mourão Filho 30, São Conrado, Rio de Janeiro, RJ", bairro:"SAO CONRADO",        lat:-23.001, lng:-43.309 },
+  { codigo:"1685", nome:"RIO DAS OSTRAS",           endereco:"Rodovia Amaral Peixoto s/n, Rio das Ostras, RJ",                      bairro:"JD CAMPOMAR",         lat:-22.529, lng:-41.944 },
+  { codigo:"1720", nome:"SAO GONCALO CENTRO",       endereco:"Avenida Presidente Kennedy 429, São Gonçalo, RJ",                     bairro:"CENTRO",              lat:-22.827, lng:-43.055 },
+  { codigo:"1721", nome:"INGA",                     endereco:"Rua Dr Paulo Alves 42, Icaraí, Niterói, RJ",                          bairro:"INGA",                lat:-22.897, lng:-43.129 },
+  { codigo:"1727", nome:"ROCHA MIRANDA",            endereco:"Avenida dos Italianos 450, Rocha Miranda, Rio de Janeiro, RJ",        bairro:"ROCHA MIRANDA",       lat:-22.844, lng:-43.338 },
+  { codigo:"1735", nome:"OLARIA",                   endereco:"Rua Leopoldina Rego 666, Olaria, Rio de Janeiro, RJ",                 bairro:"OLARIA",              lat:-22.848, lng:-43.254 },
+  { codigo:"1736", nome:"BENTO RIBEIRO",            endereco:"Rua João Vicente 1335, Bento Ribeiro, Rio de Janeiro, RJ",            bairro:"BENTO RIBEIRO",       lat:-22.870, lng:-43.361 },
+  { codigo:"1737", nome:"COPACABANA 749",           endereco:"Avenida Nossa Senhora de Copacabana 749, Copacabana, Rio de Janeiro, RJ", bairro:"COPACABANA",       lat:-22.968, lng:-43.182 },
+  { codigo:"1764", nome:"PIABETA",                  endereco:"Rua Santa Elisa 90, Magé, RJ",                                        bairro:"PIABETA",             lat:-22.640, lng:-43.161 },
+  { codigo:"1767", nome:"FLAMENGO",                 endereco:"Rua Senador Vergueiro 135, Flamengo, Rio de Janeiro, RJ",             bairro:"FLAMENGO",            lat:-22.934, lng:-43.172 },
+  { codigo:"1783", nome:"COPACABANA - A. VERDE",    endereco:"Rua Barata Ribeiro 189, Copacabana, Rio de Janeiro, RJ",              bairro:"COPACABANA",          lat:-22.967, lng:-43.186 },
+  { codigo:"1795", nome:"COPACABANA - LIDO",        endereco:"Avenida Nossa Senhora de Copacabana 109, Copacabana, Rio de Janeiro, RJ", bairro:"COPACABANA",       lat:-22.961, lng:-43.176 },
+  { codigo:"1797", nome:"BAIRRO DE FATIMA",         endereco:"Rua Riachuelo 208, Lapa, Rio de Janeiro, RJ",                         bairro:"FATIMA",              lat:-22.918, lng:-43.178 },
+  { codigo:"1798", nome:"RIO COMPRIDO",             endereco:"Rua Aristides Lobo 234, Rio Comprido, Rio de Janeiro, RJ",            bairro:"RIO COMPRIDO",        lat:-22.914, lng:-43.198 },
+  { codigo:"1801", nome:"PETROPOLIS",               endereco:"Rua General Rondon 1015, Petrópolis, RJ",                             bairro:"QUITANDINHA",         lat:-22.507, lng:-43.183 },
+  { codigo:"1803", nome:"VOLTA REDONDA",            endereco:"Rua Vinte e Três, Santa Cecília, Volta Redonda, RJ",                  bairro:"SANTA CECILIA",       lat:-22.524, lng:-44.097 },
+  { codigo:"1804", nome:"ITAIPU",                   endereco:"Estrada Francisco da Cruz Nunes 6501, Itaipu, Niterói, RJ",           bairro:"ITAIPU",              lat:-22.961, lng:-43.071 },
+  { codigo:"1813", nome:"EXTRA SUPER MACAE",        endereco:"Avenida Carlos Augusto Tinoco Garcia 85, Macaé, RJ",                  bairro:"RIVIERA FLUMINENSE",  lat:-22.381, lng:-41.776 },
+  { codigo:"1816", nome:"NITEROI - PLAZA",          endereco:"Rua Visconde de Rio Branco 511, Centro, Niterói, RJ",                 bairro:"CENTRO",              lat:-22.894, lng:-43.114 },
+  { codigo:"1818", nome:"LARGO DO BICAO",           endereco:"Rua Marechal Caetano de Faria 40, Irajá, Rio de Janeiro, RJ",         bairro:"IRAJA",               lat:-22.841, lng:-43.306 },
+  { codigo:"1823", nome:"PAULO BARBOSA",            endereco:"Rua Paulo Barbosa 161, Centro, Rio de Janeiro, RJ",                   bairro:"CENTRO",              lat:-22.906, lng:-43.196 },
+  { codigo:"1829", nome:"MACAE",                    endereco:"Rua Silva Jardim 505, Macaé, RJ",                                     bairro:"CENTRO",              lat:-22.370, lng:-41.788 },
+  { codigo:"1833", nome:"ARARUAMA",                 endereco:"Rua México 160, Araruama, RJ",                                        bairro:"CENTRO",              lat:-22.872, lng:-42.343 },
+  { codigo:"2425", nome:"BUZIOS",                   endereco:"Avenida José Bento Ribeiro Dantas 1313, Búzios, RJ",                  bairro:"CABANAS DE BUZIOS",   lat:-22.748, lng:-41.882 },
+  { codigo:"2628", nome:"VILA VALQUEIRE",           endereco:"Rua das Rosas 52, Vila Valqueire, Rio de Janeiro, RJ",                bairro:"VILA VALQUEIRE",      lat:-22.883, lng:-43.371 },
+  { codigo:"3324", nome:"CAMPOS - TURFE",           endereco:"Rua Dr Felipe Uebe 451, Campos dos Goytacazes, RJ",                   bairro:"PARQUE CALIFORNIA",   lat:-21.754, lng:-41.330 },
+  { codigo:"5063", nome:"IRAJA",                    endereco:"Estrada da Água Grande 713, Irajá, Rio de Janeiro, RJ",               bairro:"IRAJA",               lat:-22.845, lng:-43.310 },
+  { codigo:"5073", nome:"COPACABANA - M. LEMOS",   endereco:"Avenida Nossa Senhora de Copacabana 1017, Copacabana, Rio de Janeiro, RJ", bairro:"COPACABANA",      lat:-22.970, lng:-43.177 },
+  { codigo:"5076", nome:"SAO GONCALO - ROCHA",     endereco:"Avenida Edson 3240, Rocha, São Gonçalo, RJ",                          bairro:"ROCHA",               lat:-22.822, lng:-43.025 },
+  { codigo:"5263", nome:"TIJUCA - CONDE BONFIM",   endereco:"Avenida Conde de Bonfim 186, Tijuca, Rio de Janeiro, RJ",             bairro:"TIJUCA",              lat:-22.919, lng:-43.240 },
+  { codigo:"5264", nome:"GALEAO",                   endereco:"Estrada do Galeão 2700, Ilha do Governador, Rio de Janeiro, RJ",      bairro:"PORTUGUESA",          lat:-22.810, lng:-43.250 },
+  { codigo:"5267", nome:"GRANDE RIO",               endereco:"Rodovia Presidente Dutra 4200, Duque de Caxias, RJ",                  bairro:"CENTRO",              lat:-22.765, lng:-43.461 },
+  { codigo:"5268", nome:"EXTRA CARIOCA",            endereco:"Avenida Vicente de Carvalho 909, Vila da Penha, Rio de Janeiro, RJ",  bairro:"VL DA PENHA",         lat:-22.845, lng:-43.288 },
+  { codigo:"5271", nome:"VILA DA PENHA",            endereco:"Avenida Braz de Pina 904, Penha Circular, Rio de Janeiro, RJ",        bairro:"PENHA CIRCULAR",      lat:-22.836, lng:-43.291 },
+  { codigo:"5272", nome:"ALTO DA SERRA",            endereco:"Rua Tereza 1415, Petrópolis, RJ",                                     bairro:"ALTO DA SERRA",       lat:-22.509, lng:-43.190 },
+  { codigo:"5273", nome:"CORREAS",                  endereco:"Praça Luiz Furtado da Rosa 32, Corrêas, Petrópolis, RJ",              bairro:"CORREAS",             lat:-22.490, lng:-43.110 },
+  { codigo:"5274", nome:"ITAIPAVA",                 endereco:"Estrada União e Indústria 11711, Itaipava, Petrópolis, RJ",           bairro:"ITAIPAVA",            lat:-22.419, lng:-43.166 },
+  { codigo:"5275", nome:"TERESOPOLIS",              endereco:"Avenida Almirante Lúcio Meira 800, Teresópolis, RJ",                  bairro:"VARZEA",              lat:-22.412, lng:-42.964 },
+  { codigo:"5284", nome:"CABO FRIO",                endereco:"Avenida Central 100, Cabo Frio, RJ",                                  bairro:"CENTRO",              lat:-22.879, lng:-42.019 },
+  { codigo:"5285", nome:"CABO FRIO II",             endereco:"Rua Teixeira de Souza 1601, Cabo Frio, RJ",                           bairro:"CENTRO",              lat:-22.878, lng:-42.013 },
+  { codigo:"5286", nome:"SAO PEDRO DA ALDEIA",     endereco:"Avenida Getúlio Vargas 8, São Pedro da Aldeia, RJ",                   bairro:"CENTRO",              lat:-22.843, lng:-42.101 },
+  { codigo:"5287", nome:"ICARAI",                   endereco:"Avenida Sete de Setembro 291, Icaraí, Niterói, RJ",                   bairro:"ICARAI",              lat:-22.902, lng:-43.107 },
+  { codigo:"5289", nome:"FRIBURGO",                 endereco:"Avenida Alberto Braune 170, Nova Friburgo, RJ",                       bairro:"CENTRO",              lat:-22.272, lng:-42.530 },
+  { codigo:"5290", nome:"COPACABANA - SIQ. CAMPOS",endereco:"Rua Siqueira Campos 143, Copacabana, Rio de Janeiro, RJ",             bairro:"COPACABANA",          lat:-22.970, lng:-43.185 },
+  { codigo:"5291", nome:"BOTAFOGO - VOL.PATRIA",   endereco:"Rua Voluntários da Pátria 213, Botafogo, Rio de Janeiro, RJ",         bairro:"BOTAFOGO",            lat:-22.944, lng:-43.183 },
+  { codigo:"5292", nome:"SANTANA",                  endereco:"Rua Santana 157, Rio de Janeiro, RJ",                                 bairro:"CENTRO",              lat:-22.906, lng:-43.195 },
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   ESTADO
+═══════════════════════════════════════════════════════════════ */
+let nivel = 1;
+let p3on  = false;
+let cache = {}; // { "CD->1635": { km, source } }
+let recalcTimer = null;
+let googleApiKey = localStorage.getItem("gpa_gmaps_key") || "";
+let lastCalculation = null;
+
+/* ═══════════════════════════════════════════════════════════════
+   UTILS
+═══════════════════════════════════════════════════════════════ */
+const fmt   = v => v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const fmtKm = v => v.toFixed(1)+" km";
+const kmRate = (row,n) => n===2?row.km2:row.km1;
+const getLoja = code => LOJAS.find(l=>l.codigo===code)||null;
+
+function haversine(lat1,lng1,lat2,lng2){
+  const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return +(R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))).toFixed(1);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DISTÂNCIA — Google Maps Routes API (CORS ok no browser)
+═══════════════════════════════════════════════════════════════ */
+async function googleDistance(lojaA, lojaB){
+  const resp = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "X-Goog-Api-Key": googleApiKey,
+      "X-Goog-FieldMask": "routes.distanceMeters"
+    },
+    body: JSON.stringify({
+      origin:      { location:{ latLng:{ latitude:lojaA.lat, longitude:lojaA.lng } } },
+      destination: { location:{ latLng:{ latitude:lojaB.lat, longitude:lojaB.lng } } },
+      travelMode: "DRIVE",
+      routingPreference: "TRAFFIC_UNAWARE",
+      computeAlternativeRoutes: false
+    }),
+    signal: AbortSignal.timeout(8000)
+  });
+  const data = await resp.json();
+  if(data.routes?.[0]?.distanceMeters){
+    return +(data.routes[0].distanceMeters/1000).toFixed(1);
+  }
+  throw new Error("Google sem resultado: " + JSON.stringify(data).slice(0,120));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DISTÂNCIA — OSRM  (tenta múltiplos servidores públicos com CORS)
+   router.project-osrm.org NÃO envia CORS header → bloqueia browser
+   Usamos a API do OpenRouteService + fallback osrm demo via proxy
+═══════════════════════════════════════════════════════════════ */
+async function osrmDistance(lojaA, lojaB){
+  // Servidor 1: valhalla (Stadia Maps — CORS ok, gratuito sem key)
+  try {
+    const url = `https://valhalla1.openstreetmap.de/route?json=` +
+      encodeURIComponent(JSON.stringify({
+        locations:[{lon:lojaA.lng,lat:lojaA.lat},{lon:lojaB.lng,lat:lojaB.lat}],
+        costing:"auto",
+        directions_options:{units:"kilometers"}
+      }));
+    const r = await fetch(url, {signal:AbortSignal.timeout(7000)});
+    const d = await r.json();
+    if(d.trip?.summary?.length) return +(d.trip.summary.length).toFixed(1);
+  } catch(e){ console.warn("Valhalla falhou:", e.message); }
+
+  // Servidor 2: OSRM demo via allorigins proxy (contorna CORS)
+  try {
+    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${lojaA.lng},${lojaA.lat};${lojaB.lng},${lojaB.lat}?overview=false`;
+    const proxy   = `https://api.allorigins.win/get?url=${encodeURIComponent(osrmUrl)}`;
+    const r = await fetch(proxy, {signal:AbortSignal.timeout(9000)});
+    const wrapper = await r.json();
+    const d = JSON.parse(wrapper.contents);
+    if(d.code==="Ok" && d.routes?.length) return +(d.routes[0].distance/1000).toFixed(1);
+  } catch(e){ console.warn("OSRM proxy falhou:", e.message); }
+
+  throw new Error("Todos os servidores OSRM falharam");
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DISTÂNCIA — Orquestrador com cache e alerta de fallback
+═══════════════════════════════════════════════════════════════ */
+async function getDistance(lojaA, lojaB){
+  const key=`${lojaA.codigo}->${lojaB.codigo}`;
+  if(cache[key]) return cache[key];
+
+  // 1) Google Maps Routes API (se tiver key configurada)
+  if(googleApiKey){
+    try{
+      const km = await googleDistance(lojaA,lojaB);
+      const r={km, source:"google"};
+      cache[key]=r; return r;
+    }catch(e){ console.warn("Google falhou:",e.message); }
+  }
+
+  // 2) OSRM / Valhalla (gratuito, rota real)
+  try{
+    const km = await osrmDistance(lojaA,lojaB);
+    const r={km, source:"osrm"};
+    cache[key]=r; return r;
+  }catch(e){ console.warn("OSRM falhou:",e.message); }
+
+  // 3) Haversine — FALLBACK LINHA RETA — exibe alerta vermelho
+  const km = haversine(lojaA.lat,lojaA.lng,lojaB.lat,lojaB.lng);
+  const r={km, source:"haversine"};
+  cache[key]=r; return r;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   API KEY MODAL
+═══════════════════════════════════════════════════════════════ */
+function openModal(){ document.getElementById("modal").classList.add("on"); document.getElementById("api-key-input").value=googleApiKey; }
+function closeModal(){ document.getElementById("modal").classList.remove("on"); }
+function saveApiKey(){
+  const k = document.getElementById("api-key-input").value.trim();
+  googleApiKey = k;
+  if(k) localStorage.setItem("gpa_gmaps_key",k);
+  else localStorage.removeItem("gpa_gmaps_key");
+  cache={}; // limpa cache ao trocar key
+  updateApiStatus();
+  closeModal();
+}
+function updateApiStatus(){
+  const dot = document.getElementById("api-dot");
+  const txt = document.getElementById("api-status-txt");
+  if(googleApiKey){ dot.className="api-dot google"; txt.textContent="Google Maps"; }
+  else            { dot.className="api-dot osrm";   txt.textContent="OSRM (sem key)"; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SELECTS
+═══════════════════════════════════════════════════════════════ */
+function populateSelects(){
+  const tipos=[...new Set(FRETES.map(f=>f.tipo))];
+  document.getElementById("vtype").innerHTML='<option value="">Selecione...</option>'+tipos.map(t=>`<option>${t}</option>`).join("");
+
+  const opts='<option value="">—</option>'+LOJAS.map(l=>`<option value="${l.codigo}">${l.codigo} · ${l.nome} — ${l.bairro}</option>`).join("");
+  for(let i=0;i<4;i++) document.getElementById(`loja_${i}`).innerHTML=opts;
+  document.getElementById("loja_0").value="CD";
+}
+
+function updateVtype(){
+  const tipo=document.getElementById("vtype").value;
+  const mods=[...new Set(FRETES.filter(f=>f.tipo===tipo).map(f=>f.mod))];
+  document.getElementById("vmod").innerHTML='<option value="">Selecione...</option>'+mods.map(m=>`<option>${m}</option>`).join("");
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NÍVEL
+═══════════════════════════════════════════════════════════════ */
+function setNivel(n){
+  nivel=n;
+  [1,2].forEach(i=>document.getElementById(`btn-n${i}`).classList.toggle("active",i===n));
+}
+
+function checkAlerts(totalKm){
+  document.getElementById("alert-n2").style.display = (totalKm>120 && nivel<2) ? "block":"none";
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   P3
+═══════════════════════════════════════════════════════════════ */
+function toggleP3(){
+  p3on=!p3on;
+  document.getElementById("stop-3").style.display=p3on?"flex":"none";
+  document.getElementById("btn-p3").textContent=p3on?"− Remover 3ª parada":"+ Adicionar 3ª parada";
+  if(!p3on){ document.getElementById("loja_3").value=""; cache={}; }
+  triggerRecalc();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RECALC AO VIVO
+═══════════════════════════════════════════════════════════════ */
+function triggerRecalc(){
+  clearTimeout(recalcTimer);
+  recalcTimer=setTimeout(updateLegInfos,200);
+  syncManualMap();
+  // badge manual
+  const mv=document.getElementById("km-manual").value;
+  document.getElementById("manual-badge").style.display=mv?"inline-block":"none";
+}
+
+function getStops(){
+  return [0,1,2,3].map(i=>{
+    if(i===3&&!p3on) return null;
+    const v=document.getElementById(`loja_${i}`)?.value;
+    return v?getLoja(v):null;
+  });
+}
+
+function buildLegs(stops){
+  const legs=[];
+  for(let i=0;i<stops.length-1;i++){
+    if(!stops[i]||!stops[i+1]) break;
+    legs.push({de:stops[i],para:stops[i+1]});
+  }
+  return legs;
+}
+
+function updateLegInfos(){
+  const stops=getStops();
+  const legs=buildLegs(stops);
+  for(let i=0;i<3;i++){
+    const el=document.getElementById(`leg-${i}`);
+    if(!el) continue;
+    if(!legs[i]){ el.style.display="none"; continue; }
+    el.style.display="flex";
+    el.innerHTML=``;
+  }
+  const mv=parseFloat(document.getElementById("km-manual").value)||0;
+  const area=document.getElementById("km-total-area");
+  if(mv>0){ area.style.display="block"; document.getElementById("km-total-val").textContent=fmtKm(mv); }
+  else { area.style.display="none"; }
+  checkAlerts(mv);
+}
+
+function selectedRouteStops(){
+  return getStops().filter(Boolean);
+}
+
+function syncManualMap(){
+  const stops = selectedRouteStops();
+  const sub = document.getElementById("route-bar-sub");
+  const line = document.getElementById("route-bar-line");
+  if(!sub || !line) return;
+
+  const paradas = Math.max(stops.length - 1, 0);
+  sub.textContent = stops.length >= 2
+    ? `${stops[0].nome} → ${stops[stops.length-1].nome} · ${paradas} parada(s)`
+    : "Selecione origem e ao menos uma loja";
+
+  if(!stops.length){
+    line.innerHTML = `<span class="route-pill"><span class="route-pill-main">Nenhum ponto selecionado</span></span>`;
+    return;
+  }
+
+  const cls = ["cd","p1","p2","p3"];
+  line.innerHTML = stops.map((l,i)=>`
+    <span class="route-pill">
+      <span class="route-pill-dot ${cls[i]||'p3'}">${i===0?'CD':i}</span>
+      <span class="route-pill-main">${i===0?'CD':l.codigo} · ${l.bairro}</span>
+      <span class="route-pill-sub">${l.nome}</span>
+    </span>
+    ${i < stops.length-1 ? '<span class="route-arrow">→</span>' : ''}
+  `).join("");
+}
+
+function mapsUrl(outputEmbed=false){
+  const stops = selectedRouteStops();
+  if(stops.length < 2){ alert("Selecione origem e ao menos uma loja."); return null; }
+
+  const enc = v => encodeURIComponent(v);
+  const origin = enc(stops[0].endereco);
+  const destination = enc(stops[stops.length-1].endereco);
+  const waypoints = stops.slice(1,-1).map(l=>enc(l.endereco));
+
+  // Iframe sem API Key: usa o formato clássico do Google Maps,
+  // que aceita múltiplos destinos dentro do parâmetro daddr com "+to:".
+  // O formato /maps/dir/... costuma quebrar dentro de iframe em alguns navegadores.
+  if(outputEmbed){
+    const daddr = stops.slice(1).map(l=>enc(l.endereco)).join('+to:');
+    return `https://maps.google.com/maps?f=d&source=s_d&hl=pt-BR&saddr=${origin}&daddr=${daddr}&travelmode=driving&output=embed`;
+  }
+
+  // Link externo moderno, também com paradas intermediárias.
+  const waypointPart = waypoints.length ? `&waypoints=${waypoints.join('|')}` : "";
+  return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}${waypointPart}&travelmode=driving`;
+}
+function loadGoogleMapsEmbed(){
+  const url=mapsUrl(true);
+  const frame=document.getElementById("map-frame");
+  if(url && frame){
+    frame.src="about:blank";
+    setTimeout(()=>{ frame.src=url; },80);
+  }
+}
+function openGoogleMaps(){ const url=mapsUrl(false); if(url) window.open(url,"_blank"); }
+
+/* ═══════════════════════════════════════════════════════════════
+   CALCULAR
+═══════════════════════════════════════════════════════════════ */
+async function calcular(){
+  const tipo=document.getElementById("vtype").value;
+  const mod =document.getElementById("vmod").value;
+  if(!tipo||!mod){ alert("Selecione o tipo e a modalidade do veículo."); return; }
+
+  const stops=getStops();
+  if(!stops[0]||!stops[1]){ alert("Selecione ao menos a origem e a Parada 1."); return; }
+
+  const row=FRETES.find(f=>f.tipo===tipo&&f.mod===mod);
+  if(!row){ alert("Combinação não encontrada na tabela."); return; }
+
+  const mv=parseFloat(document.getElementById("km-manual").value)||0;
+  if(mv<=0){ alert("Informe o KM manual conferido no Google Maps antes de calcular."); return; }
+
+  const btn=document.getElementById("btn-calc");
+  btn.disabled=true; btn.textContent="Calculando...";
+
+  const legs=buildLegs(stops);
+
+  // Distribui o KM manual proporcionalmente entre os trechos usando Haversine como peso
+  const haversineLegs = legs.map(l => haversine(l.de.lat, l.de.lng, l.para.lat, l.para.lng));
+  const haversineTotal = haversineLegs.reduce((s,v)=>s+v, 0);
+  const legResults = legs.map((leg,i) => {
+    const propKm = haversineTotal > 0
+      ? +(mv * (haversineLegs[i] / haversineTotal)).toFixed(1)
+      : +(mv / legs.length).toFixed(1);
+    return {...leg, km: propKm, source:"manual"};
+  });
+
+  btn.disabled=false; btn.textContent="Calcular Frete →";
+
+  // KM manual conferido no Google Maps
+  const totalKm = mv;
+  const distSource = "manual";
+
+  const numParadas   = legResults.length;
+  const parasExtras  = Math.max(numParadas-1,0);
+  const rate         = kmRate(row,nivel);
+  const saida        = row.saida;
+  const parasVal     = +(parasExtras*row.extra).toFixed(2);
+  const kmVal        = +(totalKm*rate).toFixed(2);
+  const total        = +(saida+parasVal+kmVal).toFixed(2);
+
+  // Métricas
+  document.getElementById("r-saida").textContent     = fmt(saida);
+  document.getElementById("r-veiculo-sub").textContent= `${tipo} · ${mod}`;
+  document.getElementById("r-paradas").textContent   = fmt(parasVal);
+  document.getElementById("r-paradas-sub").textContent= `${parasExtras} extra(s) × ${fmt(row.extra)}`;
+  document.getElementById("r-kmval").textContent     = fmt(kmVal);
+  document.getElementById("r-kmval-sub").textContent = `${fmtKm(totalKm)} × R$ ${rate.toFixed(2)}/km`;
+  document.getElementById("r-total").textContent     = fmt(total);
+  document.getElementById("r-nivel-sub").textContent = `Nível ${nivel} · ${fmtKm(totalKm)}`;
+
+  // Trechos
+  const legLabels=["CD → Parada 1","Parada 1 → Parada 2","Parada 2 → Parada 3"];
+  document.getElementById("r-trechos").innerHTML = legResults.map((l,i)=>`
+    <div class="trecho">
+      <div class="trecho-left">
+        <div class="trecho-nome">${l.de.codigo} → ${l.para.codigo}</div>
+        <div class="trecho-bairro">${l.de.nome} · ${l.de.bairro} → ${l.para.nome} · ${l.para.bairro}</div>
+      </div>
+      <div class="trecho-right">
+        <div class="trecho-km">${fmtKm(l.km)}</div>
+        <div class="trecho-val">${fmt(+(l.km*rate).toFixed(2))}</div>
+      </div>
+    </div>
+  `).join("") + `
+    <div class="trecho" style="background:rgba(59,130,246,.07);border-top:1px solid rgba(59,130,246,.15);">
+      <div class="trecho-left">
+        <div class="trecho-nome" style="color:#60a5fa;">📍 KM total do roteiro</div>
+        <div class="trecho-bairro">Valor informado manualmente conforme Google Maps${legResults.length>1?' · distribuído proporcionalmente entre os trechos':''}</div>
+      </div>
+      <div class="trecho-right">
+        <div class="trecho-km" style="color:#60a5fa;font-size:16px;">${fmtKm(mv)}</div>
+        <div class="trecho-val">${fmt(+(mv*rate).toFixed(2))}</div>
+      </div>
+    </div>`;
+
+  // Fonte
+  const srcMap={google:"🟢 Distância via Google Maps Routes API — rota real de carro",osrm:"🟡 Distância via OSRM/Valhalla — rota real de carro (gratuito)",haversine:"🔴 ATENÇÃO: Estimativa em linha reta — valor IMPRECISO! Configure a API Key do Google para resultado correto.",manual:"🔵 KM inserido manualmente pelo usuário"};
+  const dotMap={google:"google",osrm:"osrm",haversine:"haversine",manual:"manual"};
+  const isHavFallback = distSource==="haversine";
+  const footerStyle = isHavFallback ? "background:var(--red-glow);border-top:1px solid rgba(239,68,68,.3);color:var(--red);font-weight:500;" : "";
+  document.getElementById("r-dist-footer").style.cssText = footerStyle;
+  document.getElementById("r-dist-footer").innerHTML=`<span class="ddot ${dotMap[distSource]}"></span>${srcMap[distSource]}`;
+
+  // Resumo
+  document.getElementById("r-resumo").innerHTML=`
+    <div class="resumo-row"><span class="r-lbl">Saída do CD (${tipo} · ${mod})</span><span class="r-val">${fmt(saida)}</span></div>
+    <div class="resumo-row"><span class="r-lbl">Adicionais de parada (${parasExtras} × ${fmt(row.extra)})</span><span class="r-val">${fmt(parasVal)}</span></div>
+    <div class="resumo-row"><span class="r-lbl">KM rodado (${fmtKm(totalKm)} × R$ ${rate.toFixed(2)}/km — Nível ${nivel})</span><span class="r-val">${fmt(kmVal)}</span></div>
+    <div class="resumo-row total-row"><span class="r-lbl">TOTAL FINAL</span><span class="r-val">${fmt(total)}</span></div>
+  `;
+
+  lastCalculation = {
+    generatedAt: new Date(),
+    tipo, mod, nivel,
+    stops: selectedRouteStops(),
+    totalKm, rate, saida, parasExtras, parasVal, kmVal, total,
+    fonte: "KM conferido manualmente no Google Maps"
+  };
+
+  checkAlerts(totalKm);
+  showTab("resultado");
+  document.getElementById("empty-state").style.display="none";
+  document.getElementById("result-wrap").classList.add("on");
+}
+
+
+function escapeHTML(value){
+  return String(value ?? "").replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[ch]));
+}
+
+function gerarDemonstrativoPDF(){
+  if(!lastCalculation){
+    alert("Calcule o frete antes de gerar o PDF.");
+    return;
+  }
+
+  const c = lastCalculation;
+  const dataHora = c.generatedAt.toLocaleString("pt-BR");
+  const rotaRows = c.stops.map((l,i)=>`
+    <tr>
+      <td>${i===0 ? "Origem" : `Parada ${i}`}</td>
+      <td><strong>${escapeHTML(l.codigo)} · ${escapeHTML(l.nome)}</strong><br>${escapeHTML(l.bairro)}</td>
+      <td>${escapeHTML(l.endereco)}</td>
+    </tr>
+  `).join("");
+
+  const report = document.getElementById("print-report");
+  report.innerHTML = `
+    <div class="print-header">
+      <div>
+        <div class="print-title">Demonstrativo de Cálculo de Frete</div>
+        <div class="print-subtitle">Calculadora de Frete GPA · Logística Inteligente · Grupo Pão de Açúcar</div>
+      </div>
+      <div class="print-meta">
+        Gerado em: <strong>${escapeHTML(dataHora)}</strong><br>
+        Fonte do KM: <strong>Google Maps conferido manualmente</strong><br>
+        Documento para conferência operacional/CTE
+      </div>
+    </div>
+
+    <div class="print-section">
+      <h3>Resumo do cálculo</h3>
+      <div class="print-grid">
+        <div class="print-box"><div class="print-label">Veículo</div><div class="print-value">${escapeHTML(c.tipo)} · ${escapeHTML(c.mod)}</div></div>
+        <div class="print-box"><div class="print-label">Nível da tabela</div><div class="print-value">Nível ${escapeHTML(c.nivel)}</div></div>
+        <div class="print-box"><div class="print-label">KM informado</div><div class="print-value">${fmtKm(c.totalKm)}</div></div>
+        <div class="print-box"><div class="print-label">Total final</div><div class="print-value">${fmt(c.total)}</div></div>
+      </div>
+    </div>
+
+    <div class="print-section">
+      <h3>Roteiro utilizado</h3>
+      <table class="print-table">
+        <thead><tr><th>Etapa</th><th>Loja</th><th>Endereço</th></tr></thead>
+        <tbody>${rotaRows}</tbody>
+      </table>
+    </div>
+
+    <div class="print-section">
+      <h3>Memória de cálculo</h3>
+      <table class="print-table">
+        <tbody>
+          <tr><td>Saída do CD (${escapeHTML(c.tipo)} · ${escapeHTML(c.mod)})</td><td style="text-align:right"><strong>${fmt(c.saida)}</strong></td></tr>
+          <tr><td>Adicional de parada (${c.parasExtras} × R$ 45,00)</td><td style="text-align:right"><strong>${fmt(c.parasVal)}</strong></td></tr>
+          <tr><td>KM rodado (${fmtKm(c.totalKm)} × R$ ${c.rate.toFixed(2)}/km)</td><td style="text-align:right"><strong>${fmt(c.kmVal)}</strong></td></tr>
+          <tr><td><strong>Total final</strong></td><td style="text-align:right"><strong>${fmt(c.total)}</strong></td></tr>
+        </tbody>
+      </table>
+      <div class="print-total">Total: ${fmt(c.total)}</div>
+    </div>
+
+    <div class="print-section">
+      <h3>Observação</h3>
+      <div class="print-note">
+        A distância em KM foi conferida manualmente no Google Maps e lançada na calculadora pelo usuário. Este demonstrativo registra a memória do cálculo exibida no sistema no momento da geração do PDF.
+        <br><br>
+        Responsável pela conferência: ____________________________________________
+      </div>
+    </div>
+  `;
+
+  window.print();
+}
+
+function limparTudo(){
+  if(!confirm("Deseja limpar todos os dados e iniciar um novo cálculo?")) return;
+
+  // Veículo e modalidade
+  const vtype = document.getElementById("vtype");
+  const vmod = document.getElementById("vmod");
+  if(vtype) vtype.value = "";
+  if(vmod) vmod.innerHTML = '<option value="">Selecione...</option>';
+
+  // Roteiro
+  for(let i=0;i<4;i++){
+    const el = document.getElementById(`loja_${i}`);
+    if(el) el.value = "";
+  }
+  const origem = document.getElementById("loja_0");
+  if(origem) origem.value = "CD";
+
+  // Remove 3ª parada, se estiver aberta
+  if(typeof p3on !== "undefined" && p3on){
+    p3on = false;
+    const stop3 = document.getElementById("stop-3");
+    const btnP3 = document.getElementById("btn-p3");
+    const linha2 = document.getElementById("line-2");
+    const loja3 = document.getElementById("loja_3");
+    if(stop3) stop3.style.display = "none";
+    if(btnP3) btnP3.textContent = "+ Adicionar 3ª parada";
+    if(linha2) linha2.style.display = "block";
+    if(loja3) loja3.value = "";
+  }
+
+  // Nível volta para 1
+  setNivel(1);
+
+  // KM manual
+  const kmManual = document.getElementById("km-manual");
+  if(kmManual) kmManual.value = "";
+  const badge = document.getElementById("manual-badge");
+  if(badge) badge.style.display = "none";
+
+  // Cache, alertas e total parcial
+  cache = {};
+  const alertN2 = document.getElementById("alert-n2");
+  if(alertN2) alertN2.style.display = "none";
+  const kmArea = document.getElementById("km-total-area");
+  if(kmArea) kmArea.style.display = "none";
+  const kmVal = document.getElementById("km-total-val");
+  if(kmVal) kmVal.textContent = "—";
+
+  // Limpa informações de trecho
+  for(let i=0;i<3;i++){
+    const leg = document.getElementById(`leg-${i}`);
+    if(leg){ leg.innerHTML = ""; leg.style.display = "none"; }
+  }
+
+  // Limpa mapa e barra de rota
+  const map = document.getElementById("map-frame");
+  if(map) map.src = "";
+  syncManualMap();
+
+  // Limpa resultados calculados
+  lastCalculation = null;
+  const resultWrap = document.getElementById("result-wrap");
+  const emptyState = document.getElementById("empty-state");
+  if(resultWrap) resultWrap.classList.remove("on");
+  if(emptyState) emptyState.style.display = "flex";
+
+  ["r-saida","r-veiculo-sub","r-paradas","r-paradas-sub","r-kmval","r-kmval-sub","r-total","r-nivel-sub"].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.textContent = "—";
+  });
+  const trechos = document.getElementById("r-trechos");
+  const resumo = document.getElementById("r-resumo");
+  const footer = document.getElementById("r-dist-footer");
+  if(trechos) trechos.innerHTML = "";
+  if(resumo) resumo.innerHTML = "";
+  if(footer){ footer.innerHTML = ""; footer.style.cssText = ""; }
+
+  showTab("resultado");
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TABELAS
+═══════════════════════════════════════════════════════════════ */
+function renderTabelas(){
+  document.getElementById("tbl-fretes").innerHTML=
+    `<tr><th>Tipo</th><th>Modalidade</th><th>Saída CD</th><th>R$/km N1 ≤120km</th><th>R$/km N2 121–250km</th><th>Ad. Parada</th></tr>`+
+    FRETES.map(f=>`<tr>
+      <td class="mono"><strong>${f.tipo}</strong></td>
+      <td><span class="tag ${f.mod==="FRIO"?"tag-frio":"tag-seco"}">${f.mod}</span></td>
+      <td class="mono">${fmt(f.saida)}</td>
+      <td class="mono">${fmt(f.km1)}</td>
+      <td class="mono">${fmt(f.km2)}</td>
+      <td class="mono">${fmt(f.extra)}</td>
+    </tr>`).join("");
+
+  document.getElementById("lojas-count").textContent=LOJAS.length;
+  document.getElementById("tbl-lojas").innerHTML=
+    `<tr><th>Código</th><th>Nome</th><th>Bairro</th><th>Endereço</th></tr>`+
+    LOJAS.map(l=>`<tr>
+      <td class="mono"><strong>${l.codigo}</strong></td>
+      <td>${l.nome}</td>
+      <td>${l.bairro}</td>
+      <td style="font-size:11px;color:var(--muted);">${l.endereco}</td>
+    </tr>`).join("");
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════════════════════════ */
+function showTab(id){
+  const ids=["resultado","tabela","lojas","guia"];
+  document.querySelectorAll(".nav-tab").forEach((t,i)=>t.classList.toggle("active",ids[i]===id));
+  document.getElementById("tab-resultado").style.display = id==="resultado"?"block":"none";
+  document.getElementById("tab-tabela").classList.toggle("on",id==="tabela");
+  document.getElementById("tab-lojas").classList.toggle("on",id==="lojas");
+  document.getElementById("tab-guia").classList.toggle("on",id==="guia");
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════════ */
+document.getElementById("km-manual").addEventListener("input",triggerRecalc);
+document.getElementById("modal").addEventListener("click",e=>{ if(e.target===document.getElementById("modal")) closeModal(); });
+
+populateSelects();
+renderTabelas();
+updateApiStatus();
+syncManualMap();
+loadGoogleMapsEmbed();
+</script>
+</body>
+</html>
