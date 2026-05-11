@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Frete — GPA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ─── TOKENS ──────────────────────────────────────────────────── */
+:root {
+  --bg:          #0d1117;
+  --surface:     #161b25;
+  --surface2:    #1c2333;
+  --border:      rgba(255,255,255,0.07);
+  --border2:     rgba(255,255,255,0.13);
+  --text:        #e2e8f0;
+  --muted:       #64748b;
+  --primary:     #3b82f6;
+  --primary-glow:rgba(59,130,246,0.18);
+  --amber:       #f59e0b;
+  --amber-glow:  rgba(245,158,11,0.15);
+  --red:         #ef4444;
+  --red-glow:    rgba(239,68,68,0.13);
+  --green:       #10b981;
+  --green-glow:  rgba(16,185,129,0.13);
+  --purple:      #8b5cf6;
+  --r:           12px;
+  --r-sm:        8px;
+  --shadow:      0 4px 24px rgba(0,0,0,0.4);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;font-size:14px;}
+
+/* ─── HEADER ──────────────────────────────────────────────────── */
+.header{
+  display:flex;align-items:center;gap:14px;
+  padding:16px 28px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+  position:sticky;top:0;z-index:100;
+}
+.logo{
+  width:38px;height:38px;border-radius:10px;
+  background:linear-gradient(135deg,var(--primary),#1d4ed8);
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;
+}
+.header-title{font-size:15px;font-weight:600;letter-spacing:-0.02em;}
+.header-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.status-line{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);}
+.status-dot.base{background:var(--green);}
+.btn-config{
+  font-size:12px;padding:5px 12px;border-radius:6px;
+  border:1px solid var(--border2);background:var(--surface2);
+  color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif;
+  transition:all .15s;
+}
+.btn-config:hover{background:var(--surface);border-color:var(--primary);}
+
+/* ─── LAYOUT ──────────────────────────────────────────────────── */
+.app{display:grid;grid-template-columns:400px 1fr;min-height:calc(100vh - 71px);}
+
+/* ─── SIDEBAR ─────────────────────────────────────────────────── */
+.sidebar{
+  border-right:1px solid var(--border);
+  padding:20px;display:flex;flex-direction:column;gap:18px;
+  overflow-y:auto;background:var(--surface);
+}
+.section-label{
+  font-size:10px;font-weight:600;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--muted);
+  padding-bottom:8px;border-bottom:1px solid var(--border);
+  margin-bottom:2px;
+}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:12px;color:var(--muted);font-weight:500;}
+select,input[type=number],input[type=text],input[type=password]{
+  width:100%;padding:9px 12px;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:var(--r-sm);color:var(--text);
+  font-family:'DM Sans',sans-serif;font-size:13px;
+  outline:none;transition:border-color .2s,box-shadow .2s;
+}
+select{
+  appearance:none;-webkit-appearance:none;padding-right:32px;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;
+}
+select:focus,input:focus{border-color:rgba(59,130,246,.5);box-shadow:0 0 0 3px rgba(59,130,246,.1);}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* ─── NIVEL ───────────────────────────────────────────────────── */
+.nivel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.nivel-btn{
+  padding:9px 4px;border:1px solid var(--border2);border-radius:var(--r-sm);
+  background:var(--surface2);color:var(--muted);font-size:11px;font-weight:500;
+  font-family:'DM Sans',sans-serif;cursor:pointer;text-align:center;line-height:1.5;
+  transition:all .2s;
+}
+.nivel-btn .n-range{font-size:10px;opacity:.7;display:block;}
+.nivel-btn.n1.active{background:var(--primary-glow);border-color:rgba(59,130,246,.4);color:var(--primary);}
+.nivel-btn.n2.active{background:var(--amber-glow);border-color:rgba(245,158,11,.4);color:var(--amber);}
+.nivel-btn.n3.active{background:var(--red-glow);border-color:rgba(239,68,68,.4);color:var(--red);}
+
+/* ─── ALERTAS ─────────────────────────────────────────────────── */
+.alert{
+  border-radius:var(--r-sm);padding:11px 13px;
+  font-size:12px;line-height:1.6;display:none;
+}
+.alert-title{font-weight:600;font-size:13px;margin-bottom:2px;}
+.alert-n2{background:var(--amber-glow);border:1px solid rgba(245,158,11,.3);color:var(--amber);}
+.alert-n3{background:var(--red-glow);border:1px solid rgba(239,68,68,.3);color:var(--red);}
+
+/* ─── ROTEIRO ─────────────────────────────────────────────────── */
+.rota-stop{display:flex;align-items:flex-start;gap:10px;}
+.rota-col{display:flex;flex-direction:column;align-items:center;padding-top:11px;}
+.rota-dot{
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:600;flex-shrink:0;
+  font-family:'DM Mono',monospace;
+}
+.rota-dot.cd {background:var(--primary-glow);color:var(--primary);border:1px solid rgba(59,130,246,.3);}
+.rota-dot.p1 {background:var(--amber-glow);color:var(--amber);border:1px solid rgba(245,158,11,.3);}
+.rota-dot.p2 {background:var(--green-glow);color:var(--green);border:1px solid rgba(16,185,129,.3);}
+.rota-dot.p3 {background:rgba(139,92,246,.13);color:var(--purple);border:1px solid rgba(139,92,246,.3);}
+.rota-dot.p4 {background:rgba(236,72,153,.13);color:#ec4899;border:1px solid rgba(236,72,153,.3);}
+.rota-dot.p5 {background:rgba(14,165,233,.13);color:#0ea5e9;border:1px solid rgba(14,165,233,.3);}
+.rota-line{flex:1;width:1px;background:var(--border2);min-height:8px;margin:3px 0;}
+.rota-content{flex:1;padding-bottom:10px;}
+.rota-content select{margin-bottom:0;}
+.leg-info{
+  font-size:11px;color:var(--muted);margin-top:4px;
+  font-family:'DM Mono',monospace;display:none;
+  align-items:center;gap:5px;flex-wrap:wrap;
+}
+.leg-km{color:var(--text);font-weight:500;}
+.leg-src{font-size:10px;opacity:.6;}
+.leg-spinner{animation:spin .8s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.km-pill{
+  display:flex;justify-content:space-between;align-items:center;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:var(--r-sm);padding:9px 13px;font-size:13px;
+}
+.km-pill-label{color:var(--muted);}
+.km-pill-val{font-family:'DM Mono',monospace;font-weight:500;}
+
+.btn-add{
+  width:100%;padding:8px;font-size:12px;font-weight:500;
+  color:var(--primary);background:none;cursor:pointer;
+  border:1px dashed rgba(59,130,246,.35);border-radius:var(--r-sm);
+  font-family:'DM Sans',sans-serif;transition:all .2s;
+}
+.btn-add:hover{background:var(--primary-glow);}
+
+/* ─── KM MANUAL ───────────────────────────────────────────────── */
+.manual-row{display:flex;gap:8px;align-items:center;}
+.manual-row input{flex:1;margin:0;}
+.manual-badge{
+  font-size:10px;font-weight:600;padding:3px 8px;border-radius:999px;
+  background:var(--amber-glow);color:var(--amber);border:1px solid rgba(245,158,11,.3);
+  white-space:nowrap;display:none;
+}
+.hint{font-size:11px;color:var(--muted);line-height:1.6;}
+
+/* ─── CALC BTN ────────────────────────────────────────────────── */
+.btn-calc{
+  width:100%;padding:13px;border:none;border-radius:var(--r-sm);
+  background:var(--primary);color:#fff;
+  font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;
+  cursor:pointer;letter-spacing:-0.01em;
+  transition:background .25s, box-shadow .25s, opacity .2s, transform .1s;
+  box-shadow:0 4px 16px rgba(59,130,246,.3);
+}
+.btn-calc:hover{opacity:.92;}
+.btn-calc:active{transform:scale(.98);}
+.btn-calc:disabled{opacity:.4;cursor:not-allowed;}
+.btn-calc.nivel-errado{
+  background:linear-gradient(135deg, #7f1d1d, #991b1b);
+  box-shadow:0 4px 16px rgba(239,68,68,.35);
+  cursor:not-allowed;
+  animation: shake-hint 0.4s ease;
+}
+.btn-calc.nivel-errado:hover{ opacity:1; }
+@keyframes shake-hint{
+  0%,100%{ transform:translateX(0); }
+  25%     { transform:translateX(-4px); }
+  75%     { transform:translateX(4px); }
+}
+.btn-clear{
+  width:100%;
+  margin-top:8px;
+  padding:11px 13px;
+  border:1px solid rgba(239,68,68,.35);
+  border-radius:var(--r-sm);
+  background:rgba(239,68,68,.10);
+  color:var(--red);
+  font-size:13px;
+  font-weight:700;
+  font-family:'DM Sans',sans-serif;
+  cursor:pointer;
+  transition:background .2s,border-color .2s,transform .1s;
+}
+.btn-clear:hover{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.55);}
+.btn-clear:active{transform:scale(.98);}
+
+.btn-pdf{
+  width:100%;
+  margin-top:8px;
+  padding:11px 13px;
+  border:1px solid rgba(16,185,129,.35);
+  border-radius:var(--r-sm);
+  background:rgba(16,185,129,.12);
+  color:var(--green);
+  font-size:13px;
+  font-weight:700;
+  font-family:'DM Sans',sans-serif;
+  cursor:pointer;
+  transition:background .2s,border-color .2s,transform .1s;
+}
+.btn-pdf:hover{background:rgba(16,185,129,.20);border-color:rgba(16,185,129,.55);}
+.btn-pdf:active{transform:scale(.98);}
+.print-report{display:none;}
+@media print{
+  body{background:#fff!important;color:#111!important;display:block!important;font-family:Arial,sans-serif!important;}
+  .header,.app{display:none!important;}
+  .print-report{display:block!important;padding:28px!important;color:#111!important;}
+  .print-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #111;padding-bottom:14px;margin-bottom:18px;}
+  .print-title{font-size:22px;font-weight:800;margin-bottom:4px;}
+  .print-subtitle{font-size:12px;color:#444;}
+  .print-meta{font-size:11px;text-align:right;line-height:1.45;color:#333;}
+  .print-section{margin:16px 0;page-break-inside:avoid;}
+  .print-section h3{font-size:13px;margin:0 0 8px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #ddd;padding-bottom:5px;}
+  .print-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .print-box{border:1px solid #ddd;border-radius:8px;padding:10px;background:#fafafa;}
+  .print-label{font-size:10px;color:#555;text-transform:uppercase;margin-bottom:4px;}
+  .print-value{font-size:15px;font-weight:700;}
+  .print-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .print-table th{background:#f1f5f9;color:#111;text-align:left;border:1px solid #ddd;padding:7px;font-size:11px;text-transform:uppercase;}
+  .print-table td{border:1px solid #ddd;padding:7px;vertical-align:top;}
+  .print-total{font-size:20px;font-weight:800;text-align:right;margin-top:8px;}
+  .print-note{font-size:11px;color:#444;line-height:1.5;border-top:1px solid #ddd;margin-top:18px;padding-top:10px;}
+}
+
+
+/* ─── MAIN ────────────────────────────────────────────────────── */
+.main{padding:28px;display:flex;flex-direction:column;gap:0;overflow-y:auto;}
+
+/* ─── NAV TABS ────────────────────────────────────────────────── */
+.nav-tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:24px;}
+.nav-tab{
+  font-size:13px;padding:9px 16px;border:none;background:none;
+  color:var(--muted);font-family:'DM Sans',sans-serif;cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;
+}
+.nav-tab:hover{color:var(--text);}
+.nav-tab.active{color:var(--text);border-bottom-color:var(--primary);font-weight:500;}
+
+/* ─── EMPTY STATE ─────────────────────────────────────────────── */
+.empty{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:12px;
+  color:var(--muted);text-align:center;padding:60px 20px;
+}
+.empty-icon{font-size:52px;opacity:.35;}
+.empty h3{font-size:16px;font-weight:500;color:var(--text);}
+.empty p{font-size:13px;max-width:260px;line-height:1.7;}
+
+/* ─── RESULTADO ───────────────────────────────────────────────── */
+.result-wrap{display:none;flex-direction:column;gap:20px;}
+.result-wrap.on{display:flex;}
+
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.metric{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:16px;
+}
+.metric .m-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;}
+.metric .m-val{font-size:22px;font-weight:600;font-family:'DM Mono',monospace;letter-spacing:-.03em;}
+.metric .m-sub{font-size:11px;color:var(--muted);margin-top:5px;}
+.metric.total{background:var(--green-glow);border-color:rgba(16,185,129,.2);}
+.metric.total .m-lbl{color:rgba(16,185,129,.7);}
+.metric.total .m-val{color:var(--green);font-size:28px;}
+
+/* ─── DETALHE CARD ────────────────────────────────────────────── */
+.dcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.dcard-header{
+  padding:12px 18px;border-bottom:1px solid var(--border);
+  font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--muted);
+}
+.trecho{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 18px;border-bottom:1px solid var(--border);gap:12px;
+  transition:background .15s;
+}
+.trecho:last-child{border-bottom:none;}
+.trecho:hover{background:var(--surface2);}
+.trecho-left{display:flex;flex-direction:column;gap:3px;}
+.trecho-nome{font-size:13px;font-weight:500;}
+.trecho-bairro{font-size:11px;color:var(--muted);}
+.trecho-right{text-align:right;flex-shrink:0;}
+.trecho-km{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;}
+.trecho-val{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px;}
+
+.resumo-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 18px;border-bottom:1px solid var(--border);font-size:13px;
+}
+.resumo-row:last-child{border-bottom:none;}
+.r-lbl{color:var(--muted);}
+.r-val{font-family:'DM Mono',monospace;font-weight:500;}
+.resumo-row.total-row{background:var(--green-glow);}
+.resumo-row.total-row .r-lbl{color:rgba(16,185,129,.8);font-weight:600;}
+.resumo-row.total-row .r-val{color:var(--green);font-size:16px;}
+
+.dist-footer{
+  display:flex;align-items:center;gap:7px;
+  padding:9px 18px;border-top:1px solid var(--border);
+  font-size:11px;color:var(--muted);
+}
+.ddot{width:7px;height:7px;border-radius:50%;}
+.ddot.base{background:var(--green);}
+
+/* ─── TABELAS ─────────────────────────────────────────────────── */
+.tab-wrap{display:none;}
+.tab-wrap.on{display:block;}
+.tab-scroll{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{
+  text-align:left;padding:10px 14px;
+  background:var(--surface);color:var(--muted);
+  font-size:10px;text-transform:uppercase;letter-spacing:.07em;
+  border-bottom:1px solid var(--border);font-weight:500;white-space:nowrap;
+}
+td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text);}
+tr:hover td{background:var(--surface2);}
+.tag{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:999px;}
+.tag-frio{background:var(--primary-glow);color:var(--primary);}
+.tag-seco{background:var(--amber-glow);color:var(--amber);}
+.mono{font-family:'DM Mono',monospace;}
+
+/* ─── BASE HISTÓRICA DE KM ───────────────────────────────────── */
+.base-km-card{margin-bottom:20px;}
+.base-km-summary{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap;}
+.base-km-title{font-size:13px;font-weight:700;color:var(--text);}
+.base-km-sub{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5;}
+.base-km-total{font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:var(--green);}
+.base-km-list{display:flex;flex-direction:column;}
+.base-km-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border);}
+.base-km-row:last-child{border-bottom:none;}
+.base-km-route{display:flex;flex-direction:column;gap:3px;}
+.base-km-main{font-size:13px;font-weight:700;}
+.base-km-detail{font-size:11px;color:var(--muted);line-height:1.45;}
+.base-km-value{font-family:'DM Mono',monospace;font-size:13px;font-weight:700;white-space:nowrap;}
+.base-km-row.missing{background:rgba(239,68,68,.08);}
+.base-km-row.missing .base-km-main,.base-km-row.missing .base-km-value{color:var(--red);}
+.base-km-empty{padding:18px;color:var(--muted);font-size:13px;line-height:1.6;}
+.route-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(28,35,51,.9);border:1px solid var(--border2);border-radius:999px;padding:6px 10px;line-height:1;}
+.route-pill-dot{width:20px;height:20px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:9px;font-weight:800;color:#fff;}
+.route-pill-dot.cd{background:var(--primary);}.route-pill-dot.p1{background:var(--amber);}.route-pill-dot.p2{background:var(--green);}.route-pill-dot.p3{background:var(--purple);}.route-pill-dot.p4{background:#ec4899;}.route-pill-dot.p5{background:#0ea5e9;}
+.route-pill-main{font-weight:700;color:var(--text);}.route-pill-sub{color:var(--muted);font-weight:500;}.route-arrow{color:var(--muted);opacity:.55;}
+
+/* ─── RESPONSIVE ──────────────────────────────────────────────── */
+@media(max-width:960px){
+  .app{grid-template-columns:1fr;}
+  .sidebar{border-right:none;border-bottom:1px solid var(--border);}
+  .metrics{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:560px){
+  .header{padding:14px 16px;}
+  .main,.sidebar{padding:16px;}
+  .metrics{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ HEADER ═══════════════════ -->
+<header class="header">
+  <div class="logo">🚚</div>
+  <div>
+    <div class="header-title">Calculadora de Frete GPA</div>
+    <div class="header-sub">Logística Inteligente · Grupo Pão de Açúcar</div>
+  </div>
+  <div class="header-right">
+    <div class="status-line">
+      <div class="status-dot base"></div>
+      <span>Base histórica de KM por trecho</span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════ APP ═══════════════════ -->
+<div class="app">
+
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="sidebar">
+
+    <!-- VEÍCULO -->
+    <div>
+      <div class="section-label">Veículo</div>
+      <div class="grid2" style="margin-top:10px;">
+        <div class="field">
+          <label>Tipo</label>
+          <select id="vtype" onchange="updateVtype()"><option value="">Selecione...</option></select>
+        </div>
+        <div class="field">
+          <label>Modalidade</label>
+          <select id="vmod" onchange="triggerRecalc()"><option value="">Selecione...</option></select>
+        </div>
+      </div>
+    </div>
+
+    <!-- NÍVEL -->
+    <div>
+      <div class="section-label">Nível da Tabela</div>
+      <div class="nivel-grid" style="margin-top:10px;grid-template-columns:repeat(3,1fr);">
+        <button class="nivel-btn n1 active" id="btn-n1" onclick="setNivel(1)">Nível 1<span class="n-range">até 120 km</span></button>
+        <button class="nivel-btn n2" id="btn-n2" onclick="setNivel(2)">Nível 2<span class="n-range">121–250 km</span></button>
+        <button class="nivel-btn n3" id="btn-n3" onclick="setNivel(3)">Nível 3<span class="n-range">acima 251 km</span></button>
+      </div>
+      <div class="alert alert-n2" id="alert-n2" style="margin-top:8px;">
+        <div class="alert-title">⚠️ Mude para Nível 2</div>
+        Distância acima de 120 km. Aplique a tarifa correta.
+      </div>
+      <div class="alert alert-n3" id="alert-n3" style="margin-top:8px;display:none;">
+        <div class="alert-title">🚨 Mude para Nível 3</div>
+        Distância acima de 250 km. Aplique a tarifa correta.
+      </div>
+    </div>
+
+    <!-- ROTEIRO -->
+    <div>
+      <div class="section-label">Roteiro de Entrega</div>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:0;">
+
+        <!-- CD -->
+        <div class="rota-stop">
+          <div class="rota-col"><div class="rota-dot cd">CD</div><div class="rota-line"></div></div>
+          <div class="rota-content">
+            <select id="loja_0" onchange="triggerRecalc()"><option value="">Origem — CD</option></select>
+            <div class="leg-info" id="leg-0"></div>
+          </div>
+        </div>
+
+        <!-- P1 -->
+        <div class="rota-stop">
+          <div class="rota-col"><div class="rota-dot p1">1</div><div class="rota-line"></div></div>
+          <div class="rota-content">
+            <select id="loja_1" onchange="triggerRecalc()"><option value="">Parada 1 (obrigatória)</option></select>
+            <div class="leg-info" id="leg-1"></div>
+          </div>
+        </div>
+
+        <!-- P2 -->
+        <div class="rota-stop">
+          <div class="rota-col"><div class="rota-dot p2">2</div><div class="rota-line" id="line-2"></div></div>
+          <div class="rota-content">
+            <select id="loja_2" onchange="triggerRecalc()"><option value="">Parada 2 (opcional)</option></select>
+            <div class="leg-info" id="leg-2"></div>
+          </div>
+        </div>
+
+        <!-- P3 oculto -->
+        <div class="rota-stop" id="stop-3" style="display:none;">
+          <div class="rota-col"><div class="rota-dot p3">3</div><div class="rota-line"></div></div>
+          <div class="rota-content">
+            <select id="loja_3" onchange="triggerRecalc()"><option value="">Parada 3 (opcional)</option></select>
+            <div class="leg-info" id="leg-3"></div>
+          </div>
+        </div>
+
+        <!-- P4 oculto -->
+        <div class="rota-stop" id="stop-4" style="display:none;">
+          <div class="rota-col"><div class="rota-dot p4">4</div><div class="rota-line"></div></div>
+          <div class="rota-content">
+            <select id="loja_4" onchange="triggerRecalc()"><option value="">Parada 4 (opcional)</option></select>
+            <div class="leg-info" id="leg-4"></div>
+          </div>
+        </div>
+
+        <!-- P5 oculto -->
+        <div class="rota-stop" id="stop-5" style="display:none;">
+          <div class="rota-col"><div class="rota-dot p5">5</div></div>
+          <div class="rota-content">
+            <select id="loja_5" onchange="triggerRecalc()"><option value="">Parada 5 (opcional)</option></select>
+            <div class="leg-info" id="leg-5"></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-add" id="btn-extra-stop" onclick="adicionarParada()" style="margin-top:8px;">+ Adicionar próxima parada</button>
+      <button class="btn-add" id="btn-remove-stop" onclick="removerParada()" style="margin-top:8px;display:none;color:var(--red);border-color:rgba(239,68,68,.35);">− Remover última parada</button>
+    </div>
+
+    <!-- KM TOTAL -->
+    <div id="km-total-area" style="display:none;">
+      <div class="km-pill">
+        <span class="km-pill-label">KM total do roteiro</span>
+        <span class="km-pill-val" id="km-total-val">—</span>
+      </div>
+    </div>
+
+    <!-- CALCULAR -->
+    <button class="btn-calc" id="btn-calc" onclick="calcular()">Calcular Frete →</button>
+    <button class="btn-pdf" id="btn-pdf" onclick="gerarDemonstrativoPDF()">📄 Gerar PDF do Cálculo</button>
+    <button class="btn-clear" id="btn-clear" onclick="limparTudo()">Limpar Tudo</button>
+
+  </aside>
+
+  <!-- ─── MAIN ─── -->
+  <main class="main">
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showTab('resultado')">Resultado</button>
+      <button class="nav-tab" onclick="showTab('tabela')">Tabela de Fretes</button>
+      <button class="nav-tab" onclick="showTab('lojas')">Lojas (<span id="lojas-count">0</span>)</button>
+      <button class="nav-tab" onclick="showTab('guia')">📖 Como Usar</button>
+    </div>
+
+    <!-- RESULTADO -->
+    <div id="tab-resultado">
+      <div class="dcard base-km-card" id="base-km-card">
+        <div class="base-km-summary">
+          <div>
+            <div class="base-km-title">📚 Consulta na Base Histórica de KM</div>
+            <div class="base-km-sub" id="base-km-sub">Selecione o CD e as lojas na ordem real do roteiro.</div>
+          </div>
+          <div class="base-km-total" id="base-km-total">—</div>
+        </div>
+        <div class="base-km-list" id="base-km-list">
+          <div class="base-km-empty">Nenhum trecho consultado ainda.</div>
+        </div>
+      </div>
+      <div class="empty" id="empty-state">
+        <div class="empty-icon">📦</div>
+        <h3>Aguardando simulação</h3>
+        <p>Configure o veículo, monte o roteiro de entregas e clique em Calcular Frete.</p>
+      </div>
+      <div class="result-wrap" id="result-wrap">
+        <div class="metrics">
+          <div class="metric">
+            <div class="m-lbl">Saída do CD</div>
+            <div class="m-val" id="r-saida">—</div>
+            <div class="m-sub" id="r-veiculo-sub">—</div>
+          </div>
+          <div class="metric">
+            <div class="m-lbl">Ad. de Paradas</div>
+            <div class="m-val" id="r-paradas">—</div>
+            <div class="m-sub" id="r-paradas-sub">—</div>
+          </div>
+          <div class="metric">
+            <div class="m-lbl">Valor KM</div>
+            <div class="m-val" id="r-kmval">—</div>
+            <div class="m-sub" id="r-kmval-sub">—</div>
+          </div>
+          <div class="metric total">
+            <div class="m-lbl">Total Final</div>
+            <div class="m-val" id="r-total">—</div>
+            <div class="m-sub" id="r-nivel-sub">—</div>
+          </div>
+        </div>
+
+        <div class="dcard">
+          <div class="dcard-header">Detalhamento por Trecho</div>
+          <div id="r-trechos"></div>
+          <div class="dist-footer" id="r-dist-footer"></div>
+        </div>
+
+        <div class="dcard">
+          <div class="dcard-header">Resumo Financeiro</div>
+          <div id="r-resumo"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABELA DE FRETES -->
+    <div class="tab-wrap" id="tab-tabela">
+      <div class="dcard">
+        <div class="dcard-header">Tabela de Fretes — 16 veículos</div>
+        <div class="tab-scroll"><table id="tbl-fretes"></table></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:12px;line-height:1.7;padding:0 2px;">
+        ⚡ Nível 1: até 120 km &nbsp;|&nbsp; Nível 2: 121–250 km &nbsp;|&nbsp; Nível 3: acima de 251 km &nbsp;|&nbsp; Adicional de Parada: R$ 45,00 por parada a partir da 2ª entrega. &nbsp;|&nbsp; 🏖 Lagos = tabela Região dos Lagos aplicada automaticamente.
+      </div>
+    </div>
+
+    <!-- LOJAS -->
+    <div class="tab-wrap" id="tab-lojas">
+      <div class="dcard">
+        <div class="dcard-header">Lojas GPA Cadastradas</div>
+        <div class="tab-scroll"><table id="tbl-lojas"></table></div>
+      </div>
+    </div>
+
+
+    <!-- GUIA -->
+    <div class="tab-wrap" id="tab-guia">
+
+      <style>
+        /* ── GUIA STYLES ── */
+        .guia-wrap { max-width: 860px; margin: 0 auto; padding-bottom: 40px; }
+
+        .guia-hero {
+          background: linear-gradient(135deg, rgba(59,130,246,.15) 0%, rgba(16,185,129,.08) 100%);
+          border: 1px solid rgba(59,130,246,.2);
+          border-radius: 16px;
+          padding: 28px 32px;
+          margin-bottom: 32px;
+          display: flex; align-items: center; gap: 20px;
+        }
+        .guia-hero-icon { font-size: 48px; flex-shrink: 0; }
+        .guia-hero h2 { font-size: 22px; font-weight: 700; letter-spacing: -.03em; margin-bottom: 6px; }
+        .guia-hero p  { font-size: 13px; color: var(--muted); line-height: 1.7; margin: 0; }
+
+        /* FLUXO */
+        .fluxo { display: flex; flex-direction: column; gap: 0; margin-bottom: 36px; }
+        .fluxo-step {
+          display: grid;
+          grid-template-columns: 56px 1fr;
+          gap: 0 16px;
+          position: relative;
+        }
+        .fluxo-left { display: flex; flex-direction: column; align-items: center; }
+        .step-circle {
+          width: 48px; height: 48px; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 20px; font-weight: 700;
+          flex-shrink: 0; position: relative; z-index: 1;
+          border: 2px solid;
+          transition: transform .2s;
+        }
+        .step-circle:hover { transform: scale(1.08); }
+        .step-circle.s1 { background: rgba(59,130,246,.15);  border-color: rgba(59,130,246,.4);  color: #60a5fa; }
+        .step-circle.s2 { background: rgba(245,158,11,.15);  border-color: rgba(245,158,11,.4);  color: #fbbf24; }
+        .step-circle.s3 { background: rgba(139,92,246,.15);  border-color: rgba(139,92,246,.4);  color: #a78bfa; }
+        .step-circle.s4 { background: rgba(16,185,129,.15);  border-color: rgba(16,185,129,.4);  color: #34d399; }
+        .step-circle.s5 { background: rgba(239,68,68,.15);   border-color: rgba(239,68,68,.4);   color: #f87171; }
+        .step-circle.s6 { background: rgba(236,72,153,.15);  border-color: rgba(236,72,153,.4);  color: #f472b6; }
+        .fluxo-line {
+          flex: 1; width: 2px;
+          background: linear-gradient(to bottom, var(--border2), var(--border));
+          min-height: 24px; margin: 4px 0;
+        }
+        .fluxo-last .fluxo-line { display: none; }
+
+        .step-card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 14px;
+          padding: 16px 20px;
+          margin-bottom: 20px;
+          transition: border-color .2s, box-shadow .2s;
+          cursor: default;
+        }
+        .step-card:hover {
+          border-color: var(--border2);
+          box-shadow: 0 4px 20px rgba(0,0,0,.3);
+        }
+        .step-num   { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 4px; }
+        .step-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; letter-spacing: -.01em; }
+        .step-desc  { font-size: 13px; color: var(--muted); line-height: 1.7; margin-bottom: 0; }
+        .step-tags  { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        .step-tag {
+          font-size: 11px; padding: 3px 9px; border-radius: 999px;
+          background: var(--surface2); color: var(--muted);
+          border: 1px solid var(--border2);
+        }
+        .step-tag.highlight { background: rgba(59,130,246,.12); color: #60a5fa; border-color: rgba(59,130,246,.25); }
+        .step-tag.warn { background: rgba(245,158,11,.12); color: #fbbf24; border-color: rgba(245,158,11,.25); }
+        .step-tag.ok   { background: rgba(16,185,129,.12);  color: #34d399; border-color: rgba(16,185,129,.25); }
+        .step-tag.red  { background: rgba(239,68,68,.12);   color: #f87171; border-color: rgba(239,68,68,.25); }
+
+        /* NIVEL VISUAL */
+        .nivel-explainer {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 12px;
+          margin-top: 10px;
+        }
+        .nivel-card {
+          border-radius: 10px; padding: 12px 14px;
+          border: 1px solid;
+        }
+        .nivel-card.n1 { background: rgba(59,130,246,.08);  border-color: rgba(59,130,246,.25); }
+        .nivel-card.n2 { background: rgba(245,158,11,.08);  border-color: rgba(245,158,11,.25); }
+        .nivel-card.n3 { background: rgba(239,68,68,.08);   border-color: rgba(239,68,68,.25); }
+        .nivel-card .nc-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+        .nivel-card.n1 .nc-label { color: #60a5fa; }
+        .nivel-card.n2 .nc-label { color: #fbbf24; }
+        .nivel-card.n3 .nc-label { color: #f87171; }
+        .nivel-card .nc-range { font-size: 16px; font-weight: 700; font-family: 'DM Mono', monospace; }
+        .nivel-card .nc-hint  { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+        /* FORMULA */
+        .formula-box {
+          background: var(--surface2);
+          border: 1px solid var(--border2);
+          border-radius: 12px;
+          padding: 18px 22px;
+          margin-top: 10px;
+          font-family: 'DM Mono', monospace;
+          font-size: 13px;
+          line-height: 2;
+        }
+        .f-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .f-block {
+          padding: 4px 12px; border-radius: 8px;
+          font-size: 12px; font-weight: 600;
+        }
+        .f-block.blue   { background: rgba(59,130,246,.18); color: #93c5fd; }
+        .f-block.amber  { background: rgba(245,158,11,.18); color: #fcd34d; }
+        .f-block.green  { background: rgba(16,185,129,.18); color: #6ee7b7; }
+        .f-block.purple { background: rgba(139,92,246,.18); color: #c4b5fd; }
+        .f-op { color: var(--muted); font-size: 16px; font-weight: 300; }
+        .f-eq { color: var(--green); font-size: 16px; font-weight: 700; }
+        .f-result { background: rgba(16,185,129,.2); color: #34d399; padding: 4px 14px; border-radius: 8px; font-weight: 700; }
+
+        /* DICAS */
+        .dicas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+        .dica-card {
+          background: var(--surface2); border: 1px solid var(--border);
+          border-radius: 10px; padding: 14px 16px;
+        }
+        .dica-icon { font-size: 20px; margin-bottom: 6px; }
+        .dica-title { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+        .dica-text  { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+        /* SEÇÃO TÍTULO */
+        .sec-title {
+          font-size: 11px; font-weight: 700; text-transform: uppercase;
+          letter-spacing: .1em; color: var(--muted);
+          margin-bottom: 16px; margin-top: 32px;
+          padding-bottom: 8px; border-bottom: 1px solid var(--border);
+        }
+        .sec-title:first-child { margin-top: 0; }
+
+
+
+        /* BASE HISTÓRICA / AUDITORIA */
+        .audit-box{
+          background:linear-gradient(135deg, rgba(16,185,129,.12), rgba(59,130,246,.07));
+          border:1px solid rgba(16,185,129,.25);
+          border-radius:16px;
+          padding:22px 24px;
+          margin-bottom:28px;
+        }
+        .audit-title{font-size:16px;font-weight:800;margin-bottom:8px;letter-spacing:-.01em;color:#d1fae5;}
+        .audit-text{font-size:13px;color:var(--muted);line-height:1.75;margin-bottom:12px;}
+        .audit-logic{
+          background:rgba(13,17,23,.35);
+          border:1px solid var(--border2);
+          border-radius:12px;
+          padding:14px 16px;
+          margin-top:12px;
+          font-family:'DM Mono',monospace;
+          font-size:12px;
+          line-height:1.8;
+          color:#cbd5e1;
+        }
+        .source-steps{display:grid;grid-template-columns:1fr;gap:10px;margin-top:14px;}
+        .source-step{
+          display:grid;
+          grid-template-columns:34px 1fr;
+          gap:12px;
+          align-items:flex-start;
+          background:var(--surface);
+          border:1px solid var(--border);
+          border-radius:12px;
+          padding:13px 14px;
+        }
+        .source-num{
+          width:30px;height:30px;border-radius:999px;
+          display:flex;align-items:center;justify-content:center;
+          background:rgba(59,130,246,.15);
+          color:#60a5fa;
+          border:1px solid rgba(59,130,246,.3);
+          font-size:12px;font-weight:800;font-family:'DM Mono',monospace;
+        }
+        .source-title{font-size:13px;font-weight:700;margin-bottom:4px;color:var(--text);}
+        .source-desc{font-size:12px;color:var(--muted);line-height:1.65;}
+        .source-link{color:#60a5fa;text-decoration:none;font-weight:700;word-break:break-all;}
+        .source-link:hover{text-decoration:underline;}
+        .audit-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+        .audit-badge{font-size:11px;border:1px solid var(--border2);border-radius:999px;padding:4px 9px;background:var(--surface2);color:#cbd5e1;}
+        .base-download-box{
+          display:flex;align-items:center;justify-content:space-between;gap:14px;
+          background:linear-gradient(135deg, rgba(16,185,129,.13), rgba(59,130,246,.08));
+          border:1px solid rgba(16,185,129,.28);border-radius:14px;
+          padding:16px 18px;margin-bottom:24px;
+        }
+        .base-download-title{font-size:14px;font-weight:800;color:var(--text);margin-bottom:4px;}
+        .base-download-desc{font-size:12px;color:var(--muted);line-height:1.6;}
+        .base-download-btn{
+          flex-shrink:0;display:inline-flex;align-items:center;gap:8px;
+          padding:10px 14px;border-radius:10px;background:rgba(16,185,129,.16);
+          border:1px solid rgba(16,185,129,.35);color:#34d399;
+          text-decoration:none;font-size:12px;font-weight:800;
+        }
+        .base-download-btn:hover{background:rgba(16,185,129,.24);}
+
+        @media(max-width:640px){
+          .base-download-box{flex-direction:column;align-items:flex-start;}
+          .base-download-btn{width:100%;justify-content:center;}
+          .nivel-explainer { grid-template-columns: 1fr; }
+          .dicas-grid { grid-template-columns: 1fr; }
+          .guia-hero { flex-direction: column; text-align: center; }
+          .f-row { justify-content: center; }
+        }
+      </style>
+
+      <div class="guia-wrap">
+
+        <!-- HERO -->
+        <div class="guia-hero">
+          <div class="guia-hero-icon">🚚</div>
+          <div>
+            <h2>Como usar a Calculadora de Frete GPA</h2>
+            <p>Esta calculadora usa a base histórica de KM cadastrada no TLM/SCI para apurar o percurso pago em cada trecho. O objetivo é manter o cálculo alinhado à base praticada pelo planejamento, pela roteirização e pelos pagamentos já utilizados na operação.</p>
+          </div>
+        </div>
+
+        <!-- DOWNLOAD DA BASE HISTÓRICA -->
+        <div class="base-download-box">
+          <div>
+            <div class="base-download-title">📥 Base histórica auditável — Janeiro a Abril/2026</div>
+            <div class="base-download-desc">Arquivo Excel usado como fonte para montar a base interna de KM por trecho. Para auditoria, mantenha este arquivo no mesmo repositório do sistema.</div>
+          </div>
+          <a class="base-download-btn" href="https://gpabr-my.sharepoint.com/:x:/p/eduardo_santos4/IQCcqblQGYszTbIV5x33DkrGAX76acqKBCizWXfsTj4da4c" target="_blank" rel="noopener noreferrer" style="background:rgba(59,130,246,.16);border-color:rgba(59,130,246,.35);color:#60a5fa;">🔗 Consultar on-line</a>
+        </div>
+
+        <!-- BASE HISTÓRICA -->
+        <div class="sec-title">Base histórica de KM e confiabilidade dos dados</div>
+        <div class="audit-box">
+          <div class="audit-title">Por que usamos a base histórica do TLM/SCI?</div>
+          <div class="audit-text">
+            A apuração do frete deve seguir a mesma referência operacional utilizada pelo TLM/SCI. O sistema trabalha com uma base previamente cadastrada de KM percorrido por trecho, extraída dos relatórios oficiais de planejamento e roteirização. Dessa forma, o cálculo deixa de depender de interpretações externas de rota e passa a usar a mesma base que sustenta o pagamento praticado atualmente.
+          </div>
+          <div class="audit-text">
+            Por isso, esta calculadora passou a consultar exclusivamente a base histórica extraída do TLM/SCI. Ela não estima distância, não usa coordenadas, não consulta mapas e não altera a sequência das lojas. O cálculo respeita a mesma lógica operacional já praticada pelo time: origem anterior + destino atual = KM do trecho.
+          </div>
+          <div class="audit-text">
+            Para fins de auditoria interna, a base Excel de janeiro a abril de 2026 fica disponível para download no topo desta página. Assim, é possível confrontar os trechos usados pela calculadora com o arquivo histórico que deu origem aos dados carregados no sistema.
+          </div>
+          <div class="audit-logic">
+            Exemplo de lógica aplicada:<br>
+            0409 → 1721 = KM do trecho 1<br>
+            1721 → 5287 = KM do trecho 2<br>
+            5287 → 1804 = KM do trecho 3<br>
+            KM total considerado = soma dos trechos encontrados na base
+          </div>
+          <div class="audit-badges">
+            <span class="audit-badge">Fonte: TLM/SCI</span>
+            <span class="audit-badge">Sem estimativa</span>
+            <span class="audit-badge">Sem Google Maps</span>
+            <span class="audit-badge">Rastreável para auditoria</span>
+          </div>
+        </div>
+
+        <div class="sec-title">Como extrair a base oficial de KM</div>
+        <div class="source-steps">
+          <div class="source-step">
+            <div class="source-num">1</div>
+            <div>
+              <div class="source-title">Acesse o TLM/SCI usado pelo planejamento e roteirização</div>
+              <div class="source-desc">
+                Link de acesso: <a class="source-link" href="https://sci-r2.logistics.com/sci/bi/?perspective=home" target="_blank" rel="noopener noreferrer">https://sci-r2.logistics.com/sci/bi/?perspective=home</a>
+              </div>
+            </div>
+          </div>
+          <div class="source-step">
+            <div class="source-num">2</div>
+            <div>
+              <div class="source-title">Busque pelo relatório Report Shipment Plan DC/Day</div>
+              <div class="source-desc">
+                Esse relatório apresenta o KM cadastrado no TLM para os percursos planejados. É a referência operacional usada para identificar os trechos e seus respectivos quilômetros.
+              </div>
+            </div>
+          </div>
+          <div class="source-step">
+            <div class="source-num">3</div>
+            <div>
+              <div class="source-title">Selecione o CD e o período de saída</div>
+              <div class="source-desc">
+                Após filtrar o CD e o período, baixe o arquivo em Excel na primeira opção disponível. O sistema gera um arquivo com 3 abas contendo informações de lojas, rotas e KM percorrido de uma loja para outra.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FLUXO -->
+        <div class="sec-title">Passo a passo</div>
+        <div class="fluxo">
+
+          <!-- PASSO 1 -->
+          <div class="fluxo-step">
+            <div class="fluxo-left">
+              <div class="step-circle s1">1</div>
+              <div class="fluxo-line"></div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">Passo 1</div>
+              <div class="step-title">Selecione o tipo de veículo</div>
+              <div class="step-desc">No painel esquerdo, escolha o <strong>Tipo</strong> do veículo (ex: LE07BP2, CT28FR3) e em seguida a <strong>Modalidade</strong> — SECO ou FRIO. Cada combinação tem valores de saída e R$/km diferentes.</div>
+              <div class="step-tags">
+                <span class="step-tag highlight">Campo: Tipo de veículo</span>
+                <span class="step-tag highlight">Campo: Modalidade</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- PASSO 2 -->
+          <div class="fluxo-step">
+            <div class="fluxo-left">
+              <div class="step-circle s2">2</div>
+              <div class="fluxo-line"></div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">Passo 2</div>
+              <div class="step-title">Defina o nível da tabela</div>
+              <div class="step-desc">O nível é definido pela distância total do roteiro. Se ainda não sabe o KM, deixe no Nível 1 — o sistema vai te avisar automaticamente se precisar mudar.</div>
+              <div class="nivel-explainer" style="grid-template-columns:1fr 1fr 1fr;">
+                <div class="nivel-card n1">
+                  <div class="nc-label">Nível 1</div>
+                  <div class="nc-range">até 120 km</div>
+                  <div class="nc-hint">Tarifa padrão</div>
+                </div>
+                <div class="nivel-card n2">
+                  <div class="nc-label">Nível 2</div>
+                  <div class="nc-range">121 – 250 km</div>
+                  <div class="nc-hint">Tarifa intermediária</div>
+                </div>
+                <div class="nivel-card n3">
+                  <div class="nc-label">Nível 3</div>
+                  <div class="nc-range">acima 251 km</div>
+                  <div class="nc-hint">Tarifa longa distância</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PASSO 3 -->
+          <div class="fluxo-step">
+            <div class="fluxo-left">
+              <div class="step-circle s3">3</div>
+              <div class="fluxo-line"></div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">Passo 3</div>
+              <div class="step-title">Monte o roteiro de entregas</div>
+              <div class="step-desc">Selecione a <strong>origem (CD)</strong> e as <strong>paradas na ordem exata</strong> em que o veículo vai visitar as lojas. A distância é calculada em cadeia: CD → Parada 1 → Parada 2 → Parada 3 → Parada 4 → Parada 5.</div>
+              <div class="step-tags">
+                <span class="step-tag highlight">CD → obrigatório</span>
+                <span class="step-tag highlight">Parada 1 → obrigatória</span>
+                <span class="step-tag">Parada 2 → opcional</span>
+                <span class="step-tag">Parada 3 → opcional</span>
+                <span class="step-tag">Parada 4 → opcional</span>
+                <span class="step-tag">Parada 5 → opcional</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- PASSO 4 -->
+          <div class="fluxo-step">
+            <div class="fluxo-left">
+              <div class="step-circle s4">4</div>
+              <div class="fluxo-line"></div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">Passo 4</div>
+              <div class="step-title">Confira os trechos encontrados na base histórica</div>
+              <div class="step-desc">O sistema consulta automaticamente a base histórica extraída do TLM/SCI, sempre respeitando a sequência selecionada. Se algum trecho não existir, o cálculo será bloqueado e o sistema indicará exatamente qual origem e destino precisam ser verificados ou cadastrados.</div>
+              <div class="step-tags">
+                <span class="step-tag ok">📚 KM vindo da base histórica</span>
+                <span class="step-tag highlight">🔒 Sem estimativa e sem mapa</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- PASSO 5 -->
+          <div class="fluxo-step">
+            <div class="fluxo-left">
+              <div class="step-circle s5">5</div>
+              <div class="fluxo-line"></div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">Passo 5</div>
+              <div class="step-title">Clique em "Calcular Frete →"</div>
+              <div class="step-desc">O resultado aparece à direita com o detalhamento completo por trecho e o resumo financeiro. Se a distância ultrapassar o limite do nível selecionado, um <strong>alerta aparece automaticamente</strong> pedindo para trocar o nível.</div>
+              <div class="step-tags">
+                <span class="step-tag warn">⚠️ Alerta Nível 2 se KM > 120 km</span>
+                <span class="step-tag red">🚨 Alerta Nível 3 se KM > 250 km</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- PASSO 6 -->
+          <div class="fluxo-step fluxo-last">
+            <div class="fluxo-left">
+              <div class="step-circle s6">6</div>
+              <div class="fluxo-line"></div>
+            </div>
+            <div class="step-card" style="border-color:rgba(16,185,129,.25);">
+              <div class="step-num">Passo 6</div>
+              <div class="step-title">Leia o resultado ✅</div>
+              <div class="step-desc">O <strong>Total Final</strong> aparece em verde. Você vê o valor de saída do CD, os adicionais de parada e o valor do KM rodado separados, além do detalhamento de cada trecho do roteiro.</div>
+              <div class="formula-box">
+                <div class="f-row">
+                  <span class="f-block blue">Saída CD</span>
+                  <span class="f-op">+</span>
+                  <span class="f-block amber">(Paradas extras × R$ 45)</span>
+                  <span class="f-op">+</span>
+                  <span class="f-block purple">(KM total × R$/km)</span>
+                  <span class="f-op">=</span>
+                  <span class="f-result">Total Final</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /fluxo -->
+
+        <!-- DICAS -->
+        <div class="sec-title">Dicas importantes</div>
+        <div class="dicas-grid">
+
+          <div class="dica-card">
+            <div class="dica-icon">📍</div>
+            <div class="dica-title">A ordem das paradas importa</div>
+            <div class="dica-text">Sempre monte o roteiro na <strong>sequência real</strong> que o motorista vai percorrer. A distância é calculada de ponto a ponto, então uma ordem errada gera um KM errado.</div>
+          </div>
+          <div class="dica-card">
+            <div class="dica-icon">⚠️</div>
+            <div class="dica-title">Preste atenção nos alertas de nível</div>
+            <div class="dica-text">Se aparecer um aviso laranja ou vermelho, troque o nível <strong>antes</strong> de calcular. Usar o nível errado aplica a tarifa por km incorreta e o frete sai diferente do que deveria ser pago.</div>
+          </div>
+          <div class="dica-card">
+            <div class="dica-icon">✏️</div>
+            <div class="dica-title">KM sempre pela base histórica do TLM/SCI</div>
+            <div class="dica-text">O sistema usa apenas os trechos cadastrados na base extraída do TLM/SCI. Se um trecho não existir, ele informa exatamente a origem e o destino faltante, sem estimar KM.</div>
+          </div>
+          <div class="dica-card">
+            <div class="dica-icon">📋</div>
+            <div class="dica-title">Consulte a Tabela de Fretes</div>
+            <div class="dica-text">Na aba <strong>Tabela de Fretes</strong> você vê todos os valores de saída e R$/km para cada veículo e nível. Útil para conferir se o cálculo bate com a tabela contratual.</div>
+          </div>
+          <div class="dica-card" style="border-color:rgba(59,130,246,.3);background:rgba(59,130,246,.06);">
+            <div class="dica-icon">💬</div>
+            <div class="dica-title" style="color:#60a5fa;">Dúvidas, sugestões e melhorias?</div>
+            <div class="dica-text">Entre em contato com o criador do sistema:<br><br>
+            <strong style="color:var(--text);">Eduardo Benhur</strong><br>
+            <a href="mailto:Eduardorodriguesbenhur@gmail.com" style="color:#60a5fa;text-decoration:none;font-size:12px;">Eduardorodriguesbenhur@gmail.com</a></div>
+          </div>
+        </div>
+
+      </div><!-- /guia-wrap -->
+    </div><!-- /tab-guia -->
+
+  </main>
+</div>
+
+<div class="print-report" id="print-report"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   DADOS — TABELA DE FRETES
+═══════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   TABELA DE FRETES 2025 — por região
+   Regiões: "RJ" = padrão (toda Grande Rio e interior)
+            "LAGOS" = Região dos Lagos (Cabo Frio, Búzios, Araruama, etc.)
+   Níveis:  km1 = 0–120 km | km2 = 121–250 km | km3 = acima 251 km
+═══════════════════════════════════════════════════════════════ */
+const FRETES = {
+  RJ: [
+    { tipo:"CT28BS3", mod:"SECO",  saida:611,  km1:10.50,  km2:10.64,  km3:11.25,  extra:45 },
+    { tipo:"TR16BP3", mod:"SECO",  saida:376,  km1:7.77,   km2:8.12,   km3:8.41,   extra:45 },
+    { tipo:"TO12BP2", mod:"SECO",  saida:240,  km1:7.31,   km2:7.44,   km3:7.82,   extra:45 },
+    { tipo:"LE07BP2", mod:"SECO",  saida:201,  km1:6.91,   km2:7.00,   km3:7.23,   extra:45 },
+    { tipo:"CT28FR3", mod:"FRIO",  saida:734,  km1:11.46,  km2:11.48,  km3:11.95,  extra:45 },
+    { tipo:"TR16FP3", mod:"FRIO",  saida:452,  km1:8.43,   km2:8.54,   km3:8.95,   extra:45 },
+    { tipo:"TO10FP2", mod:"FRIO",  saida:286,  km1:7.36,   km2:7.64,   km3:8.17,   extra:45 },
+    { tipo:"LE06FP2", mod:"FRIO",  saida:240,  km1:7.29,   km2:7.49,   km3:8.01,   extra:45 },
+  ],
+  LAGOS: [
+    { tipo:"CT28BS3", mod:"SECO",  saida:1150, km1:9.69,   km2:9.69,   km3:10.11,  extra:45 },
+    { tipo:"TR16BP3", mod:"SECO",  saida:760,  km1:5.51,   km2:5.57,   km3:5.75,   extra:45 },
+    { tipo:"TO12BP2", mod:"SECO",  saida:490,  km1:3.26,   km2:3.30,   km3:3.51,   extra:45 },
+    { tipo:"LE07BP2", mod:"SECO",  saida:425,  km1:2.96,   km2:3.00,   km3:3.09,   extra:45 },
+    { tipo:"CT28FR3", mod:"FRIO",  saida:1250, km1:12.75,  km2:12.75,  km3:13.30,  extra:45 },
+    { tipo:"TR16FP3", mod:"FRIO",  saida:806,  km1:7.24,   km2:7.24,   km3:7.56,   extra:45 },
+    { tipo:"TO10FP2", mod:"FRIO",  saida:520,  km1:4.39,   km2:4.39,   km3:4.58,   extra:45 },
+    { tipo:"LE06FP2", mod:"FRIO",  saida:350,  km1:3.98,   km2:3.98,   km3:4.15,   extra:45 },
+  ],
+};
+
+/* Lojas pertencentes à Região dos Lagos */
+const LOJAS_LAGOS = new Set([
+  "1685", "1813", "1829", "1833", "2425", "5275", "5284", "5285", "5286"
+]);
+
+/* Detecta a região com base nas lojas do roteiro (exceto CD origem) */
+function detectarRegiao(stops){
+  const destinos = stops.slice(1).filter(Boolean);
+  if(destinos.length === 0) return "RJ";
+  const algumLagos = destinos.some(l => LOJAS_LAGOS.has(l.codigo));
+  return algumLagos ? "LAGOS" : "RJ";
+}
+
+/* Busca linha da tabela considerando região */
+function getFrete(tipo, mod, regiao){
+  const tabela = FRETES[regiao] || FRETES.RJ;
+  return tabela.find(f => f.tipo===tipo && f.mod===mod) || null;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DADOS — LOJAS GPA (51 lojas da planilha)
+═══════════════════════════════════════════════════════════════ */
+const LOJAS = [
+  { codigo:"0409", nome:"CD Principal",             endereco:"Rodovia Washington Luiz 20755, Xerém, Duque de Caxias, RJ",                bairro:"XERÉM",              lat:-22.622, lng:-43.297 },
+  { codigo:"1272", nome:"VIVEIROS DE CASTRO",       endereco:"Rua Ministro Viveiros de Castro 38, Copacabana, Rio de Janeiro, RJ",       bairro:"COPACABANA",         lat:-22.968, lng:-43.178 },
+  { codigo:"1274", nome:"DR.SATTAMINI",             endereco:"Rua Dr Satamini 164, Tijuca, Rio de Janeiro, RJ",                          bairro:"TIJUCA",             lat:-22.924, lng:-43.231 },
+  { codigo:"1281", nome:"MARQUES DE ABRANTES",      endereco:"Rua Marques de Abrantes 165, Botafogo, Rio de Janeiro, RJ",                bairro:"BOTAFOGO",           lat:-22.948, lng:-43.182 },
+  { codigo:"1287", nome:"PAROQUIA",                 endereco:"Avenida Nossa Senhora de Copacabana 493, Copacabana, Rio de Janeiro, RJ",  bairro:"COPACABANA",         lat:-22.967, lng:-43.183 },
+  { codigo:"1412", nome:"SIQUEIRA CAMPOS",          endereco:"Rua Siqueira Campos 97, Copacabana, Rio de Janeiro, RJ",                   bairro:"COPACABANA",         lat:-22.970, lng:-43.185 },
+  { codigo:"1413", nome:"POMPEU LOUREIRO",          endereco:"Rua Pompeu Loureiro 15, Copacabana, Rio de Janeiro, RJ",                   bairro:"COPACABANA",         lat:-22.966, lng:-43.186 },
+  { codigo:"1414", nome:"N.SENHORA COPACABANA",     endereco:"Avenida Nossa Senhora de Copacabana 1162, Copacabana, Rio de Janeiro, RJ", bairro:"COPACABANA",         lat:-22.971, lng:-43.177 },
+  { codigo:"1415", nome:"JD BOTANICO",              endereco:"Rua Jardim Botânico 680, Jardim Botânico, Rio de Janeiro, RJ",             bairro:"JD BOTANICO",        lat:-22.966, lng:-43.223 },
+  { codigo:"1416", nome:"SAO CRISTOVAO",            endereco:"Rua São Luiz Gonzaga 122, São Cristóvão, Rio de Janeiro, RJ",              bairro:"S CRISTOVAO",        lat:-22.906, lng:-43.211 },
+  { codigo:"1417", nome:"BARRA",                    endereco:"Avenida das Américas 2000, Barra da Tijuca, Rio de Janeiro, RJ",           bairro:"BARRA DA TIJUCA",    lat:-23.000, lng:-43.365 },
+  { codigo:"1509", nome:"RECREIO",                  endereco:"Avenida das Américas 19019, Recreio dos Bandeirantes, Rio de Janeiro, RJ", bairro:"RECREIO",            lat:-23.009, lng:-43.474 },
+  { codigo:"1513", nome:"BOTAFOGO",                 endereco:"Rua Barão de Itambi 50, Botafogo, Rio de Janeiro, RJ",                     bairro:"BOTAFOGO",           lat:-22.948, lng:-43.185 },
+  { codigo:"1515", nome:"VILA ISABEL",              endereco:"Avenida 28 de Setembro 431, Vila Isabel, Rio de Janeiro, RJ",              bairro:"VILA ISABEL",        lat:-22.921, lng:-43.254 },
+  { codigo:"1516", nome:"LEBLON",                   endereco:"Rua José Linhares 245, Leblon, Rio de Janeiro, RJ",                        bairro:"LEBLON",             lat:-22.985, lng:-43.225 },
+  { codigo:"1271", nome:"LEBLON PADARIA",           endereco:"Rua José Linhares 245, Leblon, Rio de Janeiro, RJ",                        bairro:"LEBLON",             lat:-22.985, lng:-43.225 },
+  { codigo:"1635", nome:"LARGO DO MACHADO",         endereco:"Largo do Machado 19, Catete, Rio de Janeiro, RJ",                          bairro:"CATETE",             lat:-22.929, lng:-43.178 },
+  { codigo:"1685", nome:"RIO DAS OSTRAS",           endereco:"Rodovia Amaral Peixoto s/n, Rio das Ostras, RJ",                           bairro:"JD CAMPOMAR",        lat:-22.529, lng:-41.944 },
+  { codigo:"1721", nome:"INGA",                     endereco:"Rua Dr Paulo Alves 42, Icaraí, Niterói, RJ",                               bairro:"INGA",               lat:-22.897, lng:-43.129 },
+  { codigo:"1727", nome:"ROCHA MIRANDA",            endereco:"Avenida dos Italianos 450, Rocha Miranda, Rio de Janeiro, RJ",             bairro:"ROCHA MIRANDA",      lat:-22.844, lng:-43.338 },
+  { codigo:"1735", nome:"OLARIA",                   endereco:"Rua Leopoldina Rego 666, Olaria, Rio de Janeiro, RJ",                      bairro:"OLARIA",             lat:-22.848, lng:-43.254 },
+  { codigo:"1736", nome:"BENTO RIBEIRO",            endereco:"Rua João Vicente 1335, Bento Ribeiro, Rio de Janeiro, RJ",                 bairro:"BENTO RIBEIRO",      lat:-22.870, lng:-43.361 },
+  { codigo:"1783", nome:"COPACABANA - A. VERDE",    endereco:"Rua Barata Ribeiro 189, Copacabana, Rio de Janeiro, RJ",                   bairro:"COPACABANA",         lat:-22.967, lng:-43.186 },
+  { codigo:"1797", nome:"BAIRRO DE FATIMA",         endereco:"Rua Riachuelo 208, Lapa, Rio de Janeiro, RJ",                              bairro:"FATIMA",             lat:-22.918, lng:-43.178 },
+  { codigo:"1798", nome:"RIO COMPRIDO",             endereco:"Rua Aristides Lobo 234, Rio Comprido, Rio de Janeiro, RJ",                 bairro:"RIO COMPRIDO",       lat:-22.914, lng:-43.198 },
+  { codigo:"1801", nome:"PETROPOLIS",               endereco:"Rua General Rondon 1015, Petrópolis, RJ",                                  bairro:"QUITANDINHA",        lat:-22.507, lng:-43.183 },
+  { codigo:"1804", nome:"ITAIPU",                   endereco:"Estrada Francisco da Cruz Nunes 6501, Itaipu, Niterói, RJ",                bairro:"ITAIPU",             lat:-22.961, lng:-43.071 },
+  { codigo:"1813", nome:"EXTRA SUPER MACAE",        endereco:"Avenida Carlos Augusto Tinoco Garcia 85, Macaé, RJ",                       bairro:"RIVIERA FLUMINENSE", lat:-22.381, lng:-41.776 },
+  { codigo:"1816", nome:"NITEROI - PLAZA",          endereco:"Rua Visconde de Rio Branco 511, Centro, Niterói, RJ",                      bairro:"CENTRO",             lat:-22.894, lng:-43.114 },
+  { codigo:"1818", nome:"LARGO DO BICAO",           endereco:"Rua Marechal Caetano de Faria 40, Irajá, Rio de Janeiro, RJ",              bairro:"IRAJA",              lat:-22.841, lng:-43.306 },
+  { codigo:"1823", nome:"PAULO BARBOSA",            endereco:"Rua Paulo Barbosa 161, Centro, Rio de Janeiro, RJ",                        bairro:"CENTRO",             lat:-22.906, lng:-43.196 },
+  { codigo:"1829", nome:"MACAE",                    endereco:"Rua Silva Jardim 505, Macaé, RJ",                                          bairro:"CENTRO",             lat:-22.370, lng:-41.788 },
+  { codigo:"1833", nome:"ARARUAMA",                 endereco:"Rua México 160, Araruama, RJ",                                             bairro:"CENTRO",             lat:-22.872, lng:-42.343 },
+  { codigo:"2425", nome:"BUZIOS",                   endereco:"Avenida José Bento Ribeiro Dantas 1313, Búzios, RJ",                       bairro:"CABANAS DE BUZIOS",  lat:-22.748, lng:-41.882 },
+  { codigo:"2628", nome:"VILA VALQUEIRE",           endereco:"Rua das Rosas 52, Vila Valqueire, Rio de Janeiro, RJ",                     bairro:"VILA VALQUEIRE",     lat:-22.883, lng:-43.371 },
+  { codigo:"5063", nome:"IRAJA",                    endereco:"Estrada da Água Grande 713, Irajá, Rio de Janeiro, RJ",                    bairro:"IRAJA",              lat:-22.845, lng:-43.310 },
+  { codigo:"5073", nome:"COPACABANA - M. LEMOS",    endereco:"Avenida Nossa Senhora de Copacabana 1017, Copacabana, Rio de Janeiro, RJ", bairro:"COPACABANA",         lat:-22.970, lng:-43.177 },
+  { codigo:"5076", nome:"SAO GONCALO - ROCHA",      endereco:"Avenida Edson 3240, Rocha, São Gonçalo, RJ",                               bairro:"ROCHA",              lat:-22.822, lng:-43.025 },
+  { codigo:"5263", nome:"TIJUCA - CONDE BONFIM",    endereco:"Avenida Conde de Bonfim 186, Tijuca, Rio de Janeiro, RJ",                  bairro:"TIJUCA",             lat:-22.919, lng:-43.240 },
+  { codigo:"5271", nome:"VILA DA PENHA",            endereco:"Avenida Braz de Pina 904, Penha Circular, Rio de Janeiro, RJ",             bairro:"PENHA CIRCULAR",     lat:-22.836, lng:-43.291 },
+  { codigo:"5272", nome:"ALTO DA SERRA",            endereco:"Rua Tereza 1415, Petrópolis, RJ",                                          bairro:"ALTO DA SERRA",      lat:-22.509, lng:-43.190 },
+  { codigo:"5273", nome:"CORREAS",                  endereco:"Praça Luiz Furtado da Rosa 32, Corrêas, Petrópolis, RJ",                   bairro:"CORREAS",            lat:-22.490, lng:-43.110 },
+  { codigo:"5274", nome:"ITAIPAVA",                 endereco:"Estrada União e Indústria 11711, Itaipava, Petrópolis, RJ",                bairro:"ITAIPAVA",           lat:-22.419, lng:-43.166 },
+  { codigo:"5275", nome:"TERESOPOLIS",              endereco:"Avenida Almirante Lúcio Meira 800, Teresópolis, RJ",                       bairro:"VARZEA",             lat:-22.412, lng:-42.964 },
+  { codigo:"5284", nome:"CABO FRIO",                endereco:"Avenida Central 100, Cabo Frio, RJ",                                       bairro:"CENTRO",             lat:-22.879, lng:-42.019 },
+  { codigo:"5285", nome:"CABO FRIO II",             endereco:"Rua Teixeira de Souza 1601, Cabo Frio, RJ",                                bairro:"CENTRO",             lat:-22.878, lng:-42.013 },
+  { codigo:"5286", nome:"SAO PEDRO DA ALDEIA",      endereco:"Avenida Getúlio Vargas 8, São Pedro da Aldeia, RJ",                        bairro:"CENTRO",             lat:-22.843, lng:-42.101 },
+  { codigo:"5287", nome:"ICARAI",                   endereco:"Avenida Sete de Setembro 291, Icaraí, Niterói, RJ",                        bairro:"ICARAI",             lat:-22.902, lng:-43.107 },
+  { codigo:"5290", nome:"COPACABANA - SIQ. CAMPOS", endereco:"Rua Siqueira Campos 143, Copacabana, Rio de Janeiro, RJ",                  bairro:"COPACABANA",         lat:-22.970, lng:-43.185 },
+  { codigo:"5291", nome:"BOTAFOGO - VOL.PATRIA",    endereco:"Rua Voluntários da Pátria 213, Botafogo, Rio de Janeiro, RJ",              bairro:"BOTAFOGO",           lat:-22.944, lng:-43.183 },
+  { codigo:"5292", nome:"SANTANA",                  endereco:"Rua Santana 157, Rio de Janeiro, RJ",                                      bairro:"CENTRO",             lat:-22.906, lng:-43.195 },
+
+  { codigo:"0304", nome:"LOJA 0304", endereco:"Endereço não informado na base histórica", bairro:"NÃO INFORMADO", lat:null, lng:null },
+  { codigo:"0930", nome:"LOJA 0930", endereco:"Endereço não informado na base histórica", bairro:"NÃO INFORMADO", lat:null, lng:null },
+  { codigo:"1629", nome:"BOTAFOGO - VOL.PATRIA", endereco:"Rua Voluntários da Pátria 311, Botafogo, Rio de Janeiro, RJ", bairro:"BOTAFOGO", lat:null, lng:null },
+  { codigo:"1965", nome:"LOJA 1965", endereco:"Endereço não informado na base histórica", bairro:"NÃO INFORMADO", lat:null, lng:null },
+  { codigo:"1979", nome:"LOJA 1979", endereco:"Endereço não informado na base histórica", bairro:"NÃO INFORMADO", lat:null, lng:null },
+  { codigo:"7801", nome:"LOJA 7801", endereco:"Endereço não informado na base histórica", bairro:"NÃO INFORMADO", lat:null, lng:null },
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   BASE HISTÓRICA DE KM POR TRECHO
+   Chave: ORIGEM|DESTINO, sempre normalizada sem zeros à esquerda.
+═══════════════════════════════════════════════════════════════ */
+const TRECHOS_KM = {"409|304":1123.6,"409|930":434.0,"409|1272":50.7,"409|1274":41.5,"409|1281":45.0,"409|1287":49.4,"409|1412":49.4,"409|1413":50.1,"409|1414":48.9,"409|1415":45.9,"409|1416":37.1,"409|1417":60.9,"409|1509":63.5,"409|1515":40.2,"409|1516":48.0,"409|1629":46.3,"409|1635":44.6,"409|1685":179.0,"409|1721":51.5,"409|1727":34.2,"409|1735":28.0,"409|1736":37.9,"409|1783":50.6,"409|1797":41.2,"409|1798":40.4,"409|1801":28.0,"409|1804":61.4,"409|1813":205.9,"409|1816":51.2,"409|1818":30.3,"409|1823":33.1,"409|1829":201.5,"409|1833":131.7,"409|1965":436.7,"409|1979":1133.5,"409|2425":184.6,"409|2628":40.2,"409|5063":29.8,"409|5073":48.1,"409|5263":41.9,"409|5273":51.9,"409|5274":52.3,"409|5275":75.4,"409|5284":167.7,"409|5285":166.8,"409|5286":154.6,"409|5287":53.1,"409|5290":47.8,"409|5292":41.8,"409|7801":436.7,"930|1965":3.7,"1272|1274":13.9,"1272|1281":5.9,"1272|1287":1.7,"1272|1412":1.7,"1272|1413":2.2,"1272|1414":3.9,"1272|1415":6.5,"1272|1516":6.4,"1272|1629":7.5,"1272|5290":4.7,"1272|5292":8.7,"1274|1272":13.8,"1274|1281":9.7,"1274|1412":12.6,"1274|1414":12.0,"1274|1415":9.0,"1274|1416":7.6,"1274|1417":23.7,"1274|1515":4.7,"1274|1516":11.2,"1274|1629":9.4,"1274|1797":4.7,"1274|1798":3.2,"1274|1818":20.4,"1274|2628":23.7,"1274|5263":2.0,"1274|5290":10.9,"1274|5292":5.2,"1281|1272":3.9,"1281|1287":5.3,"1281|1412":5.3,"1281|1413":5.8,"1281|1414":7.5,"1281|1415":5.7,"1281|1516":10.0,"1281|1629":3.0,"1281|1635":2.1,"1281|5290":4.5,"1281|5292":5.5,"1287|1272":1.3,"1287|1281":6.3,"1287|1412":6.4,"1287|1515":15.6,"1287|1516":11.0,"1287|1629":6.5,"1287|5290":5.9,"1287|5292":9.2,"1412|1272":1.7,"1412|1287":0.4,"1412|1413":1.2,"1412|1414":2.5,"1412|1415":5.4,"1412|1516":5.4,"1412|1629":6.5,"1412|1635":6.4,"1412|5290":3.7,"1412|5292":9.6,"1413|1272":3.6,"1413|1274":11.6,"1413|1281":8.6,"1413|1287":2.2,"1413|1412":2.3,"1413|1414":1.7,"1413|1416":12.7,"1413|1516":4.2,"1413|1629":5.3,"1413|5290":5.4,"1413|5292":11.4,"1414|1272":3.0,"1414|1287":1.6,"1414|1412":1.7,"1414|1413":2.3,"1414|1516":4.7,"1414|5073":0.3,"1415|1272":7.5,"1415|1281":7.9,"1415|1287":6.1,"1415|1412":6.2,"1415|1413":6.8,"1415|1414":5.6,"1415|1515":16.8,"1415|1516":2.4,"1415|1629":3.8,"1415|5290":5.3,"1416|1274":5.6,"1416|1281":9.2,"1416|1412":13.6,"1416|1414":13.0,"1416|1415":10.0,"1416|1515":7.8,"1416|1516":12.2,"1416|1629":10.4,"1416|1635":8.7,"1416|1797":5.3,"1416|1798":4.6,"1416|2628":21.2,"1416|5263":6.1,"1416|5290":11.9,"1416|5292":5.9,"1417|1412":22.3,"1417|1509":17.1,"1417|1516":17.6,"1509|1417":18.3,"1515|1274":4.8,"1515|1287":16.3,"1515|1415":12.8,"1515|1416":6.3,"1515|1516":15.0,"1515|1629":13.3,"1515|1635":11.5,"1515|1798":7.1,"1515|1818":13.4,"1515|2628":15.6,"1515|5263":3.6,"1515|5290":14.8,"1515|5292":8.7,"1516|1272":6.7,"1516|1287":5.4,"1516|1412":5.5,"1516|1413":6.1,"1516|1414":3.9,"1516|1629":5.4,"1629|1272":3.5,"1629|1287":4.9,"1629|1412":4.9,"1629|1413":5.4,"1629|1414":7.1,"1629|1415":5.7,"1629|1516":9.6,"1629|1635":3.8,"1629|5290":3.2,"1635|1281":2.8,"1685|1813":27.0,"1685|1829":30.0,"1685|2425":38.5,"1685|5284":55.7,"1721|1804":12.3,"1721|1816":1.0,"1721|5287":3.9,"1727|1417":33.8,"1727|1735":14.2,"1727|1798":21.6,"1727|1818":5.1,"1727|2628":8.5,"1727|5063":10.6,"1727|5290":30.3,"1735|1274":15.1,"1735|1287":24.2,"1735|1416":12.0,"1735|1515":13.9,"1735|1727":12.9,"1735|1797":14.7,"1735|1798":14.0,"1735|1818":7.5,"1735|5063":9.7,"1735|5263":15.5,"1736|1515":17.2,"1736|1727":5.9,"1736|1798":23.8,"1736|1818":14.8,"1736|2628":2.3,"1736|5263":21.0,"1783|1414":2.9,"1783|5073":2.6,"1797|1272":8.3,"1797|1281":6.4,"1797|1287":9.7,"1797|1412":9.7,"1797|1413":10.2,"1797|1415":10.3,"1797|1416":8.4,"1797|1515":10.2,"1797|1629":7.6,"1797|1635":6.0,"1797|1798":13.2,"1797|1818":24.2,"1797|5263":7.3,"1797|5290":9.3,"1797|5292":3.0,"1798|1281":8.4,"1798|1414":11.3,"1798|1415":8.3,"1798|1515":6.8,"1798|1516":10.5,"1798|1635":8.0,"1798|1797":3.4,"1798|5073":10.6,"1798|5290":10.3,"1798|5292":3.9,"1801|1823":5.6,"1801|5273":27.7,"1804|1721":11.1,"1804|5287":9.3,"1813|1829":4.3,"1816|1721":3.2,"1816|1804":13.1,"1816|5287":4.8,"1818|1274":22.7,"1818|1515":21.5,"1818|1727":5.6,"1818|1735":6.9,"1818|1736":13.8,"1818|2628":9.4,"1818|5063":2.7,"1818|5263":23.1,"1818|5292":22.9,"1823|5273":12.2,"1823|5274":19.7,"1829|1813":4.1,"1833|1685":66.7,"1833|1829":96.0,"1833|2425":60.0,"1833|5284":43.0,"1833|5285":42.2,"1833|5286":29.9,"1965|7801":0.0,"2425|1685":37.4,"2425|1813":63.7,"2628|1274":22.9,"2628|1515":15.2,"2628|1727":6.9,"2628|1797":22.6,"2628|1818":9.3,"2628|5263":19.0,"5063|1727":4.7,"5063|1735":9.6,"5063|1736":14.2,"5063|1798":21.8,"5063|1818":4.2,"5063|2628":16.4,"5073|1414":1.7,"5073|1783":6.6,"5263|1272":13.8,"5263|1274":1.5,"5263|1281":9.6,"5263|1287":12.5,"5263|1412":12.5,"5263|1413":13.1,"5263|1415":8.9,"5263|1416":7.5,"5263|1515":8.1,"5263|1516":11.1,"5263|1629":9.4,"5263|1797":4.6,"5263|1798":3.2,"5263|5290":10.9,"5263|5292":5.2,"5273|5274":7.8,"5274|1823":19.9,"5274|5273":7.4,"5284|1685":53.4,"5284|2425":21.7,"5284|5285":2.2,"5284|5286":14.7,"5285|1685":53.6,"5285|1833":42.9,"5285|2425":21.2,"5285|5284":3.0,"5286|1685":41.6,"5286|1829":70.9,"5286|2425":29.0,"5286|5284":14.9,"5286|5285":14.1,"5287|1804":10.4,"5290|1272":1.9,"5290|1287":0.6,"5290|1413":1.1,"5290|1414":2.8,"5290|1516":5.3,"5292|1272":10.7,"5292|1281":6.5,"5292|1413":13.9,"5292|1414":12.7,"5292|1415":9.7,"5292|1416":5.4,"5292|1515":7.2,"5292|1516":11.9,"5292|1629":10.2,"5292|1635":6.1,"5292|1797":3.5,"5292|1798":4.0,"5292|5290":11.7,"7801|1965":0.0};
+const BASE_KM_INFO = {
+  origem: "Planilha BASE_CONSULTA_CALCULADORA",
+  totalTrechos: Object.keys(TRECHOS_KM).length,
+  regra: "origem anterior + loja atual = KM do trecho"
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   ESTADO
+═══════════════════════════════════════════════════════════════ */
+let nivel = 1;
+const MAX_PARADAS = 5;
+let paradasVisiveis = 2; // Paradas 1 e 2 ficam visíveis por padrão
+let recalcTimer = null;
+let lastCalculation = null;
+
+/* ═══════════════════════════════════════════════════════════════
+   UTILS
+═══════════════════════════════════════════════════════════════ */
+const fmt   = v => v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const fmtKm = v => Number(v).toFixed(1).replace('.',',')+" km";
+const kmRate = (row,n) => n===3?row.km3:n===2?row.km2:row.km1;
+const getLoja = code => LOJAS.find(l=>l.codigo===code)||null;
+function normalizarCodigo(codigo){
+  const s = String(codigo ?? "").replace(/\D/g, "");
+  if(!s) return String(codigo ?? "").trim();
+  return String(parseInt(s,10));
+}
+function codigoVisual(loja){
+  if(!loja) return "—";
+  return loja.codigo === "0409" ? "0409" : loja.codigo;
+}
+function chaveTrecho(de, para){ return `${normalizarCodigo(de.codigo)}|${normalizarCodigo(para.codigo)}`; }
+function escapeHTML(value){
+  return String(value ?? "").replace(/[&<>\"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[ch]));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SELECTS
+═══════════════════════════════════════════════════════════════ */
+function populateSelects(){
+  const tipos=[...new Set(FRETES.RJ.map(f=>f.tipo))];
+  document.getElementById("vtype").innerHTML='<option value="">Selecione...</option>'+tipos.map(t=>`<option>${t}</option>`).join("");
+
+  const opts='<option value="">—</option>'+LOJAS.map(l=>`<option value="${l.codigo}">${codigoVisual(l)} · ${l.nome} — ${l.bairro}</option>`).join("");
+  for(let i=0;i<=MAX_PARADAS;i++) document.getElementById(`loja_${i}`).innerHTML=opts;
+  document.getElementById("loja_0").value="0409";
+}
+
+function updateVtype(){
+  const tipo=document.getElementById("vtype").value;
+  const vmod=document.getElementById("vmod");
+  const mods=[...new Set(FRETES.RJ.filter(f=>f.tipo===tipo).map(f=>f.mod))];
+  vmod.innerHTML='<option value="">Selecione...</option>'+mods.map(m=>`<option value="${m}">${m}</option>`).join("");
+  if(mods.length===1) vmod.value=mods[0];
+  triggerRecalc();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NÍVEL
+═══════════════════════════════════════════════════════════════ */
+function setNivel(n){
+  nivel=n;
+  [1,2,3].forEach(i=>{
+    const btn=document.getElementById(`btn-n${i}`);
+    if(btn) btn.classList.toggle("active",i===n);
+  });
+  const consulta = consultarRotaAtual(false);
+  checkAlerts(consulta.totalKm || 0);
+}
+function nivelCorretoPorKm(totalKm){
+  if(totalKm <= 120) return 1;
+  if(totalKm >= 121 && totalKm <= 250) return 2;
+  return 3;
+}
+function nivelLabel(n){
+  if(n===1) return "Nível 1 — até 120 km";
+  if(n===2) return "Nível 2 — 121 a 250 km";
+  return "Nível 3 — a partir de 251 km";
+}
+function validarNivelSelecionado(totalKm, mostrarAlerta=true){
+  const correto = nivelCorretoPorKm(totalKm);
+  if(nivel === correto) return true;
+  if(mostrarAlerta){
+    alert(`Nível da tabela incorreto.
+
+KM encontrado na base: ${fmtKm(totalKm)}
+Nível selecionado: ${nivelLabel(nivel)}
+Nível correto: ${nivelLabel(correto)}
+
+Selecione o nível correto antes de calcular o frete.`);
+  }
+  return false;
+}
+function atualizarBotaoCalc(){
+  const consulta = consultarRotaAtual(false);
+  const btn = document.getElementById("btn-calc");
+  if(!btn) return;
+  if(consulta.missing.length || consulta.totalKm <= 0){
+    btn.classList.remove("nivel-errado");
+    btn.textContent = "Calcular Frete →";
+    btn.disabled = false;
+    return;
+  }
+  const correto = nivelCorretoPorKm(consulta.totalKm);
+  const errado  = (nivel !== correto);
+  if(errado){
+    btn.classList.add("nivel-errado");
+    btn.disabled = true;
+    const labels = {1:"Nível 1 (até 120 km)", 2:"Nível 2 (121–250 km)", 3:"Nível 3 (acima 251 km)"};
+    btn.textContent = `🔒 Selecione ${labels[correto]}`;
+  } else {
+    btn.classList.remove("nivel-errado");
+    btn.disabled = false;
+    btn.textContent = "Calcular Frete →";
+  }
+}
+function checkAlerts(totalKm){
+  const a2=document.getElementById("alert-n2");
+  const a3=document.getElementById("alert-n3");
+  const correto = totalKm > 0 ? nivelCorretoPorKm(totalKm) : 1;
+  if(a2){
+    const deveMostrarA2 = totalKm>0 && (correto===1 || correto===2) && nivel!==correto;
+    a2.style.display = deveMostrarA2 ? "block":"none";
+    a2.innerHTML = correto===1
+      ? `<div class="alert-title">⚠️ Selecione o Nível 1</div>Para ${fmtKm(totalKm)}, o cálculo só será liberado no Nível 1.`
+      : `<div class="alert-title">⚠️ Selecione o Nível 2</div>Para ${fmtKm(totalKm)}, o cálculo só será liberado no Nível 2.`;
+  }
+  if(a3){
+    a3.style.display = (totalKm>0 && correto===3 && nivel!==3) ? "block":"none";
+    a3.innerHTML = `<div class="alert-title">🚨 Selecione o Nível 3</div>Para ${fmtKm(totalKm)}, o cálculo só será liberado no Nível 3.`;
+  }
+  atualizarBotaoCalc();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PARADAS OPCIONAIS — até 5 paradas
+═══════════════════════════════════════════════════════════════ */
+function atualizarBotoesParadas(){
+  const btnAdd = document.getElementById("btn-extra-stop");
+  const btnRemove = document.getElementById("btn-remove-stop");
+  if(btnAdd){
+    btnAdd.style.display = paradasVisiveis < MAX_PARADAS ? "block" : "none";
+    btnAdd.textContent = `+ Adicionar ${paradasVisiveis + 1}ª parada`;
+  }
+  if(btnRemove){
+    btnRemove.style.display = paradasVisiveis > 2 ? "block" : "none";
+    btnRemove.textContent = `− Remover ${paradasVisiveis}ª parada`;
+  }
+}
+function atualizarParadasVisiveis(){
+  for(let i=3;i<=MAX_PARADAS;i++){
+    const stop = document.getElementById(`stop-${i}`);
+    const loja = document.getElementById(`loja_${i}`);
+    if(!stop) continue;
+    const mostrar = i <= paradasVisiveis;
+    stop.style.display = mostrar ? "flex" : "none";
+    if(!mostrar && loja) loja.value = "";
+  }
+  atualizarBotoesParadas();
+}
+function adicionarParada(){
+  if(paradasVisiveis >= MAX_PARADAS) return;
+  paradasVisiveis++;
+  atualizarParadasVisiveis();
+  triggerRecalc();
+}
+function removerParada(){
+  if(paradasVisiveis <= 2) return;
+  const loja = document.getElementById(`loja_${paradasVisiveis}`);
+  if(loja) loja.value = "";
+  paradasVisiveis--;
+  atualizarParadasVisiveis();
+  triggerRecalc();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CONSULTA NA BASE HISTÓRICA
+═══════════════════════════════════════════════════════════════ */
+function getStops(){
+  const stops = [];
+  for(let i=0;i<=MAX_PARADAS;i++){
+    if(i>paradasVisiveis) { stops.push(null); continue; }
+    const v=document.getElementById(`loja_${i}`)?.value;
+    stops.push(v?getLoja(v):null);
+  }
+  return stops;
+}
+function selectedRouteStops(){ return getStops().filter(Boolean); }
+function buildLegs(stops){
+  const legs=[];
+  for(let i=0;i<stops.length-1;i++){
+    if(!stops[i]||!stops[i+1]) break;
+    legs.push({de:stops[i],para:stops[i+1]});
+  }
+  return legs;
+}
+function consultarTrechosBase(stops){
+  const legs = buildLegs(stops);
+  const trechos=[];
+  const missing=[];
+  let totalKm=0;
+  for(const leg of legs){
+    const key = chaveTrecho(leg.de, leg.para);
+    const km = TRECHOS_KM[key];
+    if(km === undefined || km === null || Number.isNaN(Number(km))){
+      const erro = `KM não encontrado na base para o trecho: ${codigoVisual(leg.de)} → ${codigoVisual(leg.para)}. Verifique a sequência ou cadastre este trecho na base.`;
+      missing.push({...leg, key, erro});
+      trechos.push({...leg, key, km:null, missing:true, erro});
+    } else {
+      const kmNum=Number(km);
+      totalKm += kmNum;
+      trechos.push({...leg, key, km:kmNum, missing:false, source:"base"});
+    }
+  }
+  return {legs, trechos, missing, totalKm:+totalKm.toFixed(1)};
+}
+function consultarRotaAtual(render=true){
+  const consulta = consultarTrechosBase(getStops());
+  if(render) renderConsultaBase(consulta);
+  return consulta;
+}
+function renderConsultaBase(consulta){
+  const list=document.getElementById("base-km-list");
+  const sub=document.getElementById("base-km-sub");
+  const total=document.getElementById("base-km-total");
+  if(!list || !sub || !total) return;
+
+  const stops=selectedRouteStops();
+  if(stops.length<2){
+    sub.textContent = `Base carregada: ${BASE_KM_INFO.totalTrechos} trechos cadastrados.`;
+    total.textContent = "—";
+    list.innerHTML = `<div class="base-km-empty">Selecione o CD e ao menos uma loja para consultar os trechos.</div>`;
+    return;
+  }
+  sub.textContent = consulta.missing.length
+    ? "Existe trecho sem KM cadastrado. O cálculo será bloqueado."
+    : "Todos os trechos foram encontrados na base histórica.";
+  total.textContent = consulta.missing.length ? "KM pendente" : `Total: ${fmtKm(consulta.totalKm)}`;
+  list.innerHTML = consulta.trechos.map(t=>`
+    <div class="base-km-row ${t.missing?'missing':''}">
+      <div class="base-km-route">
+        <div class="base-km-main">${codigoVisual(t.de)} → ${codigoVisual(t.para)} ${t.missing?'— trecho não cadastrado':''}</div>
+        <div class="base-km-detail">${escapeHTML(t.de.nome)} · ${escapeHTML(t.de.bairro)} → ${escapeHTML(t.para.nome)} · ${escapeHTML(t.para.bairro)}</div>
+      </div>
+      <div class="base-km-value">${t.missing?'Não encontrado':fmtKm(t.km)}</div>
+    </div>
+  `).join("");
+}
+function updateLegInfos(){
+  const consulta = consultarRotaAtual(true);
+  for(let i=0;i<MAX_PARADAS;i++){
+    const el=document.getElementById(`leg-${i}`);
+    if(!el) continue;
+    const t=consulta.trechos[i];
+    if(!t){ el.style.display="none"; continue; }
+    el.style.display="flex";
+    el.style.color = t.missing ? "var(--red)" : "";
+    el.innerHTML = t.missing
+      ? `<span style="color:var(--red);font-weight:700;">KM não encontrado na base</span>`
+      : `<span class="leg-km">${fmtKm(t.km)}</span> <span class="leg-src">📚 Base histórica</span>`;
+  }
+  const area=document.getElementById("km-total-area");
+  if(consulta.trechos.length && !consulta.missing.length){
+    area.style.display="block";
+    document.getElementById("km-total-val").textContent=fmtKm(consulta.totalKm);
+    checkAlerts(consulta.totalKm);
+  } else {
+    area.style.display="none";
+    checkAlerts(0);
+  }
+}
+function syncBasePreview(){ consultarRotaAtual(true); }
+function triggerRecalc(){
+  clearTimeout(recalcTimer);
+  recalcTimer=setTimeout(updateLegInfos,120);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CALCULAR
+═══════════════════════════════════════════════════════════════ */
+function calcular(){
+  const tipo=document.getElementById("vtype").value;
+  const mod =document.getElementById("vmod").value;
+  if(!tipo||!mod){ alert("Selecione o tipo e a modalidade do veículo."); return; }
+
+  const stops=getStops();
+  if(!stops[0]||!stops[1]){ alert("Selecione ao menos a origem e a Parada 1."); return; }
+
+  const consulta = consultarTrechosBase(stops);
+  renderConsultaBase(consulta);
+  if(consulta.missing.length){
+    alert(consulta.missing[0].erro);
+    return;
+  }
+
+  const regiao = detectarRegiao(stops);
+  const row=getFrete(tipo, mod, regiao);
+  if(!row){ alert("Combinação não encontrada na tabela para a região "+regiao+"."); return; }
+
+  const totalKm = consulta.totalKm;
+  checkAlerts(totalKm);
+  if(!validarNivelSelecionado(totalKm, true)) return;
+
+  const legResults = consulta.trechos.map(t=>({...t, source:"base"}));
+  const numParadas   = legResults.length;
+  const parasExtras  = Math.max(numParadas-1,0);
+  const rate         = kmRate(row,nivel);
+  const saida        = row.saida;
+  const parasVal     = +(parasExtras*row.extra).toFixed(2);
+  const kmVal        = +(totalKm*rate).toFixed(2);
+  const total        = +(saida+parasVal+kmVal).toFixed(2);
+
+  document.getElementById("r-saida").textContent      = fmt(saida);
+  document.getElementById("r-veiculo-sub").textContent= `${tipo} · ${mod}`;
+  document.getElementById("r-paradas").textContent    = fmt(parasVal);
+  document.getElementById("r-paradas-sub").textContent= `${parasExtras} extra(s) × ${fmt(row.extra)}`;
+  document.getElementById("r-kmval").textContent      = fmt(kmVal);
+  document.getElementById("r-kmval-sub").textContent  = `${fmtKm(totalKm)} × R$ ${rate.toFixed(2)}/km`;
+  document.getElementById("r-total").textContent      = fmt(total);
+  const regiaoLabel = regiao==="LAGOS" ? "🏖 Região dos Lagos" : "🏙 Grande Rio / Interior";
+  document.getElementById("r-nivel-sub").textContent  = `Nível ${nivel} · ${fmtKm(totalKm)} · ${regiaoLabel}`;
+
+  document.getElementById("r-trechos").innerHTML = legResults.map((l,i)=>`
+    <div class="trecho">
+      <div class="trecho-left">
+        <div class="trecho-nome">${codigoVisual(l.de)} → ${codigoVisual(l.para)} = ${fmtKm(l.km)}</div>
+        <div class="trecho-bairro">${escapeHTML(l.de.nome)} · ${escapeHTML(l.de.bairro)} → ${escapeHTML(l.para.nome)} · ${escapeHTML(l.para.bairro)}</div>
+      </div>
+      <div class="trecho-right">
+        <div class="trecho-km">${fmtKm(l.km)}</div>
+        <div class="trecho-val">${fmt(+(l.km*rate).toFixed(2))}</div>
+      </div>
+    </div>
+  `).join("") + `
+    <div class="trecho" style="background:rgba(16,185,129,.07);border-top:1px solid rgba(16,185,129,.15);">
+      <div class="trecho-left">
+        <div class="trecho-nome" style="color:var(--green);">📚 KM total considerado</div>
+        <div class="trecho-bairro">Soma dos trechos encontrados na base histórica. Nenhuma estimativa foi usada.</div>
+      </div>
+      <div class="trecho-right">
+        <div class="trecho-km" style="color:var(--green);font-size:16px;">${fmtKm(totalKm)}</div>
+        <div class="trecho-val">${fmt(kmVal)}</div>
+      </div>
+    </div>`;
+
+  document.getElementById("r-dist-footer").style.cssText = "";
+  document.getElementById("r-dist-footer").innerHTML=`<span class="ddot base"></span>📚 KM consultado na base histórica de rotas/trechos — sem consulta por mapa, sem serviço externo e sem estimativa.`;
+
+  document.getElementById("r-resumo").innerHTML=`
+    <div class="resumo-row"><span class="r-lbl">Saída do CD (${tipo} · ${mod})</span><span class="r-val">${fmt(saida)}</span></div>
+    <div class="resumo-row"><span class="r-lbl">Adicionais de parada (${parasExtras} × ${fmt(row.extra)})</span><span class="r-val">${fmt(parasVal)}</span></div>
+    <div class="resumo-row"><span class="r-lbl">KM rodado (${fmtKm(totalKm)} × R$ ${rate.toFixed(2)}/km — Nível ${nivel})</span><span class="r-val">${fmt(kmVal)}</span></div>
+    <div class="resumo-row total-row"><span class="r-lbl">TOTAL FINAL</span><span class="r-val">${fmt(total)}</span></div>
+  `;
+
+  lastCalculation = {
+    generatedAt: new Date(), tipo, mod, nivel, regiao,
+    stops: selectedRouteStops(), legResults,
+    totalKm, rate, saida, parasExtras, parasVal, kmVal, total,
+    fonte: "Base histórica de KM por trecho"
+  };
+
+  showTab("resultado");
+  document.getElementById("empty-state").style.display="none";
+  document.getElementById("result-wrap").classList.add("on");
+}
+
+function gerarDemonstrativoPDF(){
+  if(!lastCalculation){ alert("Calcule o frete antes de gerar o PDF."); return; }
+  const c = lastCalculation;
+  const dataHora = c.generatedAt.toLocaleString("pt-BR");
+  const regiaoPdfLabel = c.regiao==="LAGOS" ? "Região dos Lagos" : "Grande Rio / Interior";
+  const rotaRows = c.stops.map((l,i)=>`
+    <tr>
+      <td>${i===0 ? "Origem" : `Parada ${i}`}</td>
+      <td><strong>${escapeHTML(codigoVisual(l))} · ${escapeHTML(l.nome)}</strong><br>${escapeHTML(l.bairro)}</td>
+      <td>${escapeHTML(l.endereco)}</td>
+    </tr>`).join("");
+  const trechoRows = c.legResults.map(t=>`
+    <tr>
+      <td>${escapeHTML(codigoVisual(t.de))} → ${escapeHTML(codigoVisual(t.para))}</td>
+      <td style="text-align:right"><strong>${fmtKm(t.km)}</strong></td>
+      <td>Base histórica</td>
+    </tr>`).join("");
+
+  const report = document.getElementById("print-report");
+  report.innerHTML = `
+    <div class="print-header">
+      <div>
+        <div class="print-title">Demonstrativo de Cálculo de Frete</div>
+        <div class="print-subtitle">Calculadora de Frete GPA · Logística Inteligente · Grupo Pão de Açúcar</div>
+      </div>
+      <div class="print-meta">
+        Gerado em: <strong>${escapeHTML(dataHora)}</strong><br>
+        Fonte do KM: <strong>Base histórica de KM por trecho</strong><br>
+        Documento para conferência operacional/CTE
+      </div>
+    </div>
+    <div class="print-section">
+      <h3>Resumo do cálculo</h3>
+      <div class="print-grid">
+        <div class="print-box"><div class="print-label">Veículo</div><div class="print-value">${escapeHTML(c.tipo)} · ${escapeHTML(c.mod)}</div></div>
+        <div class="print-box"><div class="print-label">Nível da tabela</div><div class="print-value">Nível ${escapeHTML(c.nivel)}</div></div>
+        <div class="print-box"><div class="print-label">KM da base</div><div class="print-value">${fmtKm(c.totalKm)}</div></div>
+        <div class="print-box"><div class="print-label">Total final</div><div class="print-value">${fmt(c.total)}</div></div>
+      </div>
+    </div>
+    <div class="print-section">
+      <h3>Roteiro utilizado <span style="font-weight:400;text-transform:none;letter-spacing:0;margin-left:10px;">— Região: <strong>${escapeHTML(regiaoPdfLabel)}</strong></span></h3>
+      <table class="print-table"><thead><tr><th>Etapa</th><th>Loja</th><th>Endereço</th></tr></thead><tbody>${rotaRows}</tbody></table>
+    </div>
+    <div class="print-section">
+      <h3>Trechos consultados na base</h3>
+      <table class="print-table"><thead><tr><th>Trecho</th><th>KM</th><th>Fonte</th></tr></thead><tbody>${trechoRows}</tbody></table>
+    </div>
+    <div class="print-section">
+      <h3>Memória de cálculo</h3>
+      <table class="print-table"><tbody>
+        <tr><td>Saída do CD (${escapeHTML(c.tipo)} · ${escapeHTML(c.mod)})</td><td style="text-align:right"><strong>${fmt(c.saida)}</strong></td></tr>
+        <tr><td>Adicional de parada (${c.parasExtras} × ${fmt(c.parasExtras ? c.parasVal/c.parasExtras : 0)})</td><td style="text-align:right"><strong>${fmt(c.parasVal)}</strong></td></tr>
+        <tr><td>KM rodado (${fmtKm(c.totalKm)} × R$ ${c.rate.toFixed(2)}/km)</td><td style="text-align:right"><strong>${fmt(c.kmVal)}</strong></td></tr>
+        <tr><td><strong>Total final</strong></td><td style="text-align:right"><strong>${fmt(c.total)}</strong></td></tr>
+      </tbody></table>
+      <div class="print-total">Total: ${fmt(c.total)}</div>
+    </div>
+    <div class="print-section"><h3>Observação</h3><div class="print-note">
+      A distância em KM foi consultada exclusivamente na base histórica de rotas/trechos. O sistema não usa consulta por mapa, serviço externo, coordenadas nem estimativas. Quando algum trecho não existe na base, o cálculo é bloqueado e o trecho faltante é informado ao usuário.
+    </div></div>`;
+  window.print();
+}
+
+function limparTudo(){
+  if(!confirm("Deseja limpar todos os dados e iniciar um novo cálculo?")) return;
+  const vtype = document.getElementById("vtype");
+  const vmod = document.getElementById("vmod");
+  if(vtype) vtype.value = "";
+  if(vmod) vmod.innerHTML = '<option value="">Selecione...</option>';
+  for(let i=0;i<=MAX_PARADAS;i++){
+    const el = document.getElementById(`loja_${i}`);
+    if(el) el.value = "";
+  }
+  const origem = document.getElementById("loja_0");
+  if(origem) origem.value = "0409";
+  paradasVisiveis = 2;
+  atualizarParadasVisiveis();
+  setNivel(1);
+  ["alert-n2","alert-n3"].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display="none"; });
+  const kmArea = document.getElementById("km-total-area");
+  if(kmArea) kmArea.style.display = "none";
+  const kmVal = document.getElementById("km-total-val");
+  if(kmVal) kmVal.textContent = "—";
+  for(let i=0;i<MAX_PARADAS;i++){
+    const leg = document.getElementById(`leg-${i}`);
+    if(leg){ leg.innerHTML = ""; leg.style.display = "none"; }
+  }
+  lastCalculation = null;
+  renderConsultaBase({trechos:[],missing:[],totalKm:0});
+  const resultWrap = document.getElementById("result-wrap");
+  const emptyState = document.getElementById("empty-state");
+  if(resultWrap) resultWrap.classList.remove("on");
+  if(emptyState) emptyState.style.display = "flex";
+  ["r-saida","r-veiculo-sub","r-paradas","r-paradas-sub","r-kmval","r-kmval-sub","r-total","r-nivel-sub"].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.textContent = "—";
+  });
+  const trechos = document.getElementById("r-trechos");
+  const resumo = document.getElementById("r-resumo");
+  const footer = document.getElementById("r-dist-footer");
+  if(trechos) trechos.innerHTML = "";
+  if(resumo) resumo.innerHTML = "";
+  if(footer){ footer.innerHTML = ""; footer.style.cssText = ""; }
+  showTab("resultado");
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TABELAS
+═══════════════════════════════════════════════════════════════ */
+function renderTabelas(){
+  const renderRows = (lista, regiaoLabel, corClass) => lista.map(f=>`<tr>
+    <td class="mono"><strong>${f.tipo}</strong></td>
+    <td><span class="tag ${f.mod==="FRIO"?"tag-frio":"tag-seco"}">${f.mod}</span></td>
+    <td><span class="tag" style="background:${corClass==='rj'?'rgba(59,130,246,.12)':'rgba(245,158,11,.12)'};color:${corClass==='rj'?'#60a5fa':'#fbbf24'}">${regiaoLabel}</span></td>
+    <td class="mono">${fmt(f.saida)}</td>
+    <td class="mono">${fmt(f.km1)}</td>
+    <td class="mono">${fmt(f.km2)}</td>
+    <td class="mono">${fmt(f.km3)}</td>
+    <td class="mono">${fmt(f.extra)}</td>
+  </tr>`).join("");
+
+  document.getElementById("tbl-fretes").innerHTML=
+    `<tr>
+      <th>Tipo</th><th>Modalidade</th><th>Região</th>
+      <th>Saída CD</th>
+      <th>R$/km N1<br><small style="font-weight:400;opacity:.7">até 120km</small></th>
+      <th>R$/km N2<br><small style="font-weight:400;opacity:.7">121–250km</small></th>
+      <th>R$/km N3<br><small style="font-weight:400;opacity:.7">+251km</small></th>
+      <th>Ad. Parada</th>
+    </tr>`+
+    renderRows(FRETES.RJ,    "Grande Rio / Interior", "rj")+
+    `<tr><td colspan="8" style="background:var(--surface2);font-size:11px;font-weight:600;color:var(--muted);padding:10px 14px;text-transform:uppercase;letter-spacing:.06em;">🏖 Região dos Lagos</td></tr>`+
+    renderRows(FRETES.LAGOS, "Região dos Lagos",      "lagos");
+
+  document.getElementById("lojas-count").textContent=LOJAS.length;
+  document.getElementById("tbl-lojas").innerHTML=
+    `<tr><th>Código</th><th>Nome</th><th>Região</th><th>Bairro</th><th>Endereço</th></tr>`+
+    LOJAS.map(l=>`<tr>
+      <td class="mono"><strong>${l.codigo}</strong></td>
+      <td>${l.nome}</td>
+      <td>${LOJAS_LAGOS.has(l.codigo)?'<span class="tag" style="background:rgba(245,158,11,.12);color:#fbbf24">Lagos</span>':'<span class="tag" style="background:rgba(59,130,246,.12);color:#60a5fa">RJ</span>'}</td>
+      <td>${l.bairro}</td>
+      <td style="font-size:11px;color:var(--muted);">${l.endereco}</td>
+    </tr>`).join("");
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════════════════════════ */
+function showTab(id){
+  const ids=["resultado","tabela","lojas","guia"];
+  document.querySelectorAll(".nav-tab").forEach((t,i)=>t.classList.toggle("active",ids[i]===id));
+  document.getElementById("tab-resultado").style.display = id==="resultado"?"block":"none";
+  document.getElementById("tab-tabela").classList.toggle("on",id==="tabela");
+  document.getElementById("tab-lojas").classList.toggle("on",id==="lojas");
+  document.getElementById("tab-guia").classList.toggle("on",id==="guia");
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════════ */
+populateSelects();
+renderTabelas();
+atualizarParadasVisiveis();
+renderConsultaBase({trechos:[],missing:[],totalKm:0});
+</script>
+</body>
+</html>
